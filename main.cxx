@@ -1,16 +1,10 @@
 #include<unistd.h>
-#include"GUI.h"
+#include"Parser.h"
 
 int main()
 {
 	LogoGUI *g = new LogoGUI(800, 800);
-	g->bd(100);
-	g->rt(90);
-	g->bd(100);
-	g->rt(90);
-	g->bd(100);
-	g->rt(90);
-	g->bd(100);
-	g->rt(90);
+	Parser *p = new Parser("repeat 8 [ repeat 4 [ fd 100 rt 90 ] rt 45 ]");
+	p->execute(g);
 	sleep(10);
 }
