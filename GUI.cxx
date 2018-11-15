@@ -1,6 +1,8 @@
 #include<X11/Xlib.h>
 #include<assert.h>
+#include<math.h>
 #include"GUI.h"
+#include<stdio.h>
 #define NIL (0)
 LogoGUI::LogoGUI(int width, int height)
 {
@@ -9,7 +11,7 @@ LogoGUI::LogoGUI(int width, int height)
 	this->x = width / 2;
 	this->y = height / 2;
 	this->pen = true;
-	this->angle = 0;
+	this->angle = 270;
 
 	// Open Display and alloc Window
 	this->dpy = XOpenDisplay(NIL);
@@ -28,25 +30,42 @@ LogoGUI::LogoGUI(int width, int height)
 		if(e.type == MapNotify)
 			break;
 	}
-	XDrawLine(this->dpy, this->win, this->gc, 10, 60, 180, 20);
 	XFlush(this->dpy);
 }
 
-void LogoGUI::setxy(int x, int y) {
+void LogoGUI::setxy(double x, double y) {
 	this->x = x;
 	this->y = y;
 }
 
-void LogoGUI::fd(int len) {
+void LogoGUI::fd(double len) {
+	double ex, ey;
+	double ang = this->angle * 0.0174533;
+	ex = this->x + len * cos(ang);
+	ey = this->y + len * sin(ang);
+	printf("x=%f, y=%f, angle=%f\n", this->x, this->y, this->angle);
+	if(this->pen) {
+		XDrawLine(this->dpy, this->win, this->gc, this->x, this->y, ex, ey);
+		XFlush(this->dpy);
+	}
+	this->x = ex;
+	this->y = ey;
+
 }
 
-void LogoGUI::bd(int len) {
+void LogoGUI::bd(double len) {
+	this->fd(len*-1);	
 }
 
-void LogoGUI::rt(int angle) {
+
+void LogoGUI::rt(double angle) {
+	this->angle += angle;
+	if(this->angle >= 360) this->angle -= 360;
 }
 
-void LogoGUI::lt(int angle) {
+void LogoGUI::lt(double angle) {
+	this->angle -= angle;
+	if(this->angle < 0) this->angle += 360;
 }
 
 void LogoGUI::pu() {

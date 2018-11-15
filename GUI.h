@@ -2,17 +2,17 @@
 class LogoGUI {
 	public:
 		LogoGUI(int width, int height);
-		void setxy(int x, int y);
-		void fd(int len);
-		void bd(int len);
-		void rt(int angle);
-		void lt(int angle);
+		void setxy(double x, double y);
+		void fd(double len);
+		void bd(double len);
+		void rt(double angle);
+		void lt(double angle);
 		void pu();
 		void pd();
 	private:
-		int x, y;
+		double x, y;
 		int width, height;
-		int angle;
+		double angle;
 		bool pen;
 		Display *dpy;
 		Window win;

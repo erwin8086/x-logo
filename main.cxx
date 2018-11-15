@@ -3,6 +3,14 @@
 
 int main()
 {
-	LogoGUI *g = new LogoGUI(200, 100);
+	LogoGUI *g = new LogoGUI(800, 800);
+	g->bd(100);
+	g->rt(90);
+	g->bd(100);
+	g->rt(90);
+	g->bd(100);
+	g->rt(90);
+	g->bd(100);
+	g->rt(90);
 	sleep(10);
 }
