@@ -8,11 +8,6 @@ LogoGUI::LogoGUI(int width, int height)
 {
 	this->height = height;
 	this->width  = width;
-	this->x = width / 2;
-	this->y = height / 2;
-	this->pen = true;
-	this->angle = 270;
-
 	// Open Display and alloc Window
 	this->dpy = XOpenDisplay(NIL);
 	assert(dpy);
@@ -30,6 +25,16 @@ LogoGUI::LogoGUI(int width, int height)
 		if(e.type == MapNotify)
 			break;
 	}
+	this->reset();
+}
+
+void LogoGUI::reset()
+{
+	this->x = this->width / 2;
+	this->y = this->height / 2;
+	this->pen = true;
+	this->angle = 270;
+	XClearWindow(this->dpy, this->win);
 	XFlush(this->dpy);
 }
 

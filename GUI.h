@@ -9,6 +9,7 @@ class LogoGUI {
 		void lt(double angle);
 		void pu();
 		void pd();
+		void reset();
 	private:
 		double x, y;
 		int width, height;
