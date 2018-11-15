@@ -1,5 +1,6 @@
 #include<stdlib.h>
 #include<string.h>
+#include<time.h>
 #include"Parser.h"
 #define TK_FD 1
 #define TK_BD 2
@@ -49,8 +50,11 @@ void Parser::execute(LogoGUI *g)
 				}
 				free(cmd);
 				break;
-
 		}
+		struct timespec ti;
+		ti.tv_sec = 0;
+		ti.tv_nsec = 10000000;
+		while(nanosleep(&ti, &ti));
 		t = this->nextToken();
 	}
 }
