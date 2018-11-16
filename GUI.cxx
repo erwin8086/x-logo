@@ -1,4 +1,5 @@
 #include<X11/Xlib.h>
+#include<X11/Xutil.h>
 #define XK_MISCELLANY
 #define XK_LATIN1
 #include<X11/keysymdef.h>
@@ -19,6 +20,17 @@ LogoGUI::LogoGUI(int width, int height)
 	this->whiteColor = WhitePixel(dpy, DefaultScreen(dpy));
 	this->win = XCreateSimpleWindow(this->dpy, DefaultRootWindow(this->dpy),
 			0, 0, width, height, 0, this->blackColor, this->blackColor);
+
+	// Make window not resizeable
+	XSizeHints hints;
+	XGetWMNormalHints(this->dpy, this->win, &hints, NULL);
+	hints.flags |= PMinSize | PMaxSize;
+	hints.min_width = width;
+	hints.max_width = width;
+	hints.min_height = height;
+	hints.max_height = height;
+	XSetWMNormalHints(this->dpy, this->win, &hints);
+
 	// Load first font found
 	int nfonts;
 	char **fonts = XListFonts(this->dpy, "-*-fixed-*-*-*-*-12-*-*-*-*-*-*-*", 1, &nfonts);
