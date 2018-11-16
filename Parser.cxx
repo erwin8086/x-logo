@@ -9,6 +9,7 @@
 #define TK_PU 5
 #define TK_PD 6
 #define TK_REPEAT 7
+#define TK_CLEAR 8
 
 Parser::Parser(const char* text)
 {
@@ -25,6 +26,8 @@ Parser::Parser(const char* text)
 void Parser::execute(LogoGUI *g)
 {
 	int t = this->nextToken();
+	int rep;
+	char *cmd;
 	while(t)
 	{
 		// Execute the token in LogoGUI
@@ -49,14 +52,17 @@ void Parser::execute(LogoGUI *g)
 				g->pd();
 				break;
 			case TK_REPEAT:
-				int rep = this->nextNumber();
-				char *cmd = this->nextCmdList();
+				rep = this->nextNumber();
+				cmd = this->nextCmdList();
 				while(rep-- > 0){
 					Parser *p = new Parser(cmd);
 					p->execute(g);
 					delete p;
 				}
 				free(cmd);
+				break;
+			case TK_CLEAR:
+				g->reset();
 				break;
 		}
 		// Wait 10ms and read next Command
@@ -147,6 +153,9 @@ int Parser::nextToken()
 			return TK_REPEAT;
 		case 'l':
 			return TK_LT;
+		case 'c':
+			this->text += 3;
+			return TK_CLEAR;
 	}
 	return 0;
 }

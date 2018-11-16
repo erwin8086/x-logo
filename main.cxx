@@ -22,7 +22,6 @@ int main()
 		if(strcmp(next, "exit") == 0) // exit if "exit"
 			break;
 		Parser *p = new Parser(next);
-		g->reset();
 		p->execute(g);
 		delete p;
 	}

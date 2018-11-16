@@ -162,7 +162,12 @@ void LogoGUI::readString(char *buf, int len)
 	int i = 0;
 	while(1)
 	{
+		//draw the interface and the text
+		this->drawInterface(buf);
+		this->drawText(10, 497, buf);
+		XFlush(this->dpy);
 		XNextEvent(this->dpy, &e);
+
 		if(e.type == KeyPress)
 		{
 			// Process input
@@ -196,10 +201,6 @@ void LogoGUI::readString(char *buf, int len)
 			printf("Expose\n");
 			this->restore();
 		}
-		//draw the interface and the text
-		this->drawInterface(buf);
-		this->drawText(10, 497, buf);
-		XFlush(this->dpy);
 	}
 	this->logStr(buf); // add a copy to the log
 	XDestroyIC(xic);
