@@ -15,11 +15,19 @@ Parser::Parser(const char* text)
 	this->text = text;
 }
 
+// Execute text on a per command base
+// this looks like
+// fd -> number -> rt -> number
+// or repeat -> number -> [cmds]
+// it starts with a command
+// if command requires a parameter it is interpreted
+// no error checking anywhere here
 void Parser::execute(LogoGUI *g)
 {
 	int t = this->nextToken();
 	while(t)
 	{
+		// Execute the token in LogoGUI
 		switch(t)
 		{
 			case TK_FD:
@@ -51,6 +59,7 @@ void Parser::execute(LogoGUI *g)
 				free(cmd);
 				break;
 		}
+		// Wait 10ms and read next Command
 		struct timespec ti;
 		ti.tv_sec = 0;
 		ti.tv_nsec = 10000000;
@@ -59,6 +68,8 @@ void Parser::execute(LogoGUI *g)
 	}
 }
 
+// Interpret next thing as a number
+// Once again no error checking
 double Parser::nextNumber()
 {
 	char num[30];
@@ -75,10 +86,14 @@ double Parser::nextNumber()
 		return atol(num);
 
 	} else {
+		// if its not a number return 0
 		return 0;
 	}
 }
 
+// Interpret next thing as a list of commands
+// surrounded by [ ]
+// works with nested repeats
 char* Parser::nextCmdList()
 {
 	int opens = -1;
@@ -101,13 +116,16 @@ char* Parser::nextCmdList()
 		}
 		this->text++;
 	}
+	// create a substring to return
 	char *sub = (char*) malloc(this->text - start - 1);
 	memcpy(sub, start + 1, this->text - start - 2);
 	sub[this->text - start - 2] = 0;
 	return sub;
 }	
 	
-
+// Interpret next thing as a command
+// no error checking
+// reaaaa == repeat
 int Parser::nextToken()
 {
 	while(*this->text == ' ' || *this->text == '\n') this->text++;

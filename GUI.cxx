@@ -9,6 +9,12 @@
 #include<stdio.h>
 #include<string.h>
 #define NIL (0)
+// The main GUI component
+// also does the turtle graphics,
+// input, command history
+
+
+// Creates window on screen and setup X11
 LogoGUI::LogoGUI(int width, int height)
 {
 	this->height = height;
@@ -53,6 +59,7 @@ LogoGUI::LogoGUI(int width, int height)
 	this->reset();
 }
 
+// resets gui to draw again
 void LogoGUI::reset()
 {
 	if(this->lines) delete this->lines;
@@ -66,11 +73,13 @@ void LogoGUI::reset()
 	XFlush(this->dpy);
 }
 
+// draw line to main window
 void LogoGUI::drawLine(int x1, int y1, int x2, int y2)
 {
 	XDrawLine(this->dpy, this->win, this->gc, x1, y1, x2, y2);
 }
 
+// draw the interface at the bottom of the window
 void LogoGUI::drawInterface(char *c)
 {
 	XClearArea(this->dpy, this->win, 0 , 400, 400, 100, false);
@@ -85,6 +94,8 @@ void LogoGUI::drawInterface(char *c)
 	this->drawCursor(c);
 }
 
+// draw input cursor
+// its a simple line with moves as text is given
 void LogoGUI::drawCursor(char *c)
 {
 	int x = 10;
@@ -95,6 +106,7 @@ void LogoGUI::drawCursor(char *c)
 	this->drawLine(x, 488, x, 497);
 }
 
+// add last command to history
 void LogoGUI::logStr(char *c)
 {
 	if(this->nextLog >= 5) {
@@ -109,6 +121,7 @@ void LogoGUI::logStr(char *c)
 	this->nextLog++;
 }
 
+// draw the command history to screen
 void LogoGUI::drawLog()
 {
 	int i;
@@ -118,6 +131,7 @@ void LogoGUI::drawLog()
 	}
 }
 
+// repaint everything
 void LogoGUI::restore()
 {
 	int i;
@@ -128,6 +142,7 @@ void LogoGUI::restore()
 	}
 }
 
+// read string and process events
 void LogoGUI::readString(char *buf, int len)
 {
 	buf[0] = 0;
@@ -150,6 +165,7 @@ void LogoGUI::readString(char *buf, int len)
 		XNextEvent(this->dpy, &e);
 		if(e.type == KeyPress)
 		{
+			// Process input
 		       	XmbLookupString(xic, ke, &c, 1, &ks, &s);
 			if(ks==XK_Return) break;
 			if(ks==XK_BackSpace) {
@@ -164,30 +180,33 @@ void LogoGUI::readString(char *buf, int len)
 				buf[++i] = 0;
 			}
 		} else if(e.type == ButtonPress) {
+			// Process mouse click
 			printf("ButtonPress");
-			if(be->x > 370 && be->y > 485)
+			if(be->x > 370 && be->y > 485) // RUN has selected
 			{
 				break;
-			} else if(be->y < 493 && be->y > 405) {
+			} else if(be->y < 493 && be->y > 405) { // a command in history
 				int index = (be->y - 405) / 15;
 				if(this->nextLog > index && strlen(this->log[index]) < len) {
 					strcpy(buf, this->log[index]);
 					i = strlen(buf);
 				}
 			}
-		} else if(e.type == Expose) {
+		} else if(e.type == Expose) { // Restore the window
 			printf("Expose\n");
 			this->restore();
 		}
+		//draw the interface and the text
 		this->drawInterface(buf);
 		this->drawText(10, 497, buf);
 		XFlush(this->dpy);
 	}
-	this->logStr(buf);
+	this->logStr(buf); // add a copy to the log
 	XDestroyIC(xic);
 	XCloseIM(xim);
 }
 
+// Draw a Text with the first 12px fixed font found
 void LogoGUI::drawText(int x, int y, const char *text)
 {
 	XTextItem t[1];
@@ -198,11 +217,14 @@ void LogoGUI::drawText(int x, int y, const char *text)
 	XDrawText(this->dpy, this->win, this->gc, x, y, t, 1);
 }
 
+// Go to x, y
 void LogoGUI::setxy(double x, double y) {
 	this->x = x;
 	this->y = y;
 }
 
+// Go forward
+// Convert coordinate systems
 void LogoGUI::fd(double len) {
 	double ex, ey;
 	double ang = this->angle * 0.0174533;
@@ -210,6 +232,7 @@ void LogoGUI::fd(double len) {
 	ey = this->y + len * sin(ang);
 	printf("x=%f, y=%f, angle=%f\n", this->x, this->y, this->angle);
 	if(this->pen) {
+		// Remember the lines
 		this->lines->push_back(this->x);
 		this->lines->push_back(this->y);
 		this->lines->push_back(ex);
@@ -222,25 +245,31 @@ void LogoGUI::fd(double len) {
 
 }
 
+// backward
 void LogoGUI::bd(double len) {
 	this->fd(len*-1);	
 }
 
-
+// right
+// TODO: numbers bigger than 360.
 void LogoGUI::rt(double angle) {
 	this->angle += angle;
 	if(this->angle >= 360) this->angle -= 360;
 }
 
+// left
+// TODO: numbers bigger than 360
 void LogoGUI::lt(double angle) {
 	this->angle -= angle;
 	if(this->angle < 0) this->angle += 360;
 }
 
+// Pen up
 void LogoGUI::pu() {
 	this->pen = false;
 }
 
+// Pen down
 void LogoGUI::pd() {
 	this->pen = true;
 }
