@@ -1,4 +1,5 @@
 #include<X11/Xlib.h>
+#include<vector>
 class LogoGUI {
 	public:
 		LogoGUI(int width, int height);
@@ -31,5 +32,7 @@ class LogoGUI {
 		int nextLog = 0;
 		void drawLog();
 		void logStr(char *c);
+		std::vector<int> *lines;
+		void restore();
 
 };

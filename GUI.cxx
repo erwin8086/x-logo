@@ -27,7 +27,8 @@ LogoGUI::LogoGUI(int width, int height)
 	this->fontstruct = XLoadQueryFont(this->dpy, fonts[0]);
 	XFreeFontNames(fonts);
 
-	XSelectInput(this->dpy, this->win, StructureNotifyMask | KeyPressMask | ButtonPressMask);
+	XSelectInput(this->dpy, this->win, StructureNotifyMask | KeyPressMask | ButtonPressMask | 
+			ExposureMask);
 	XMapWindow(this->dpy, this->win);
 	this->gc = XCreateGC(this->dpy, this->win, 0, NIL);
 	XSetForeground(this->dpy, this->gc, this->whiteColor);
@@ -42,6 +43,8 @@ LogoGUI::LogoGUI(int width, int height)
 
 void LogoGUI::reset()
 {
+	if(this->lines) delete this->lines;
+	this->lines = new std::vector<int>();
 	this->x = this->width / 2;
 	this->y = (this->height - 100) / 2;
 	this->pen = true;
@@ -103,8 +106,19 @@ void LogoGUI::drawLog()
 	}
 }
 
+void LogoGUI::restore()
+{
+	int i;
+	for(i=0; i < this->lines->size(); i+=4)
+	{
+		XDrawLine(this->dpy, this->win, this->gc, this->lines->at(i), this->lines->at(i+1),
+			       this->lines->at(i+2), this->lines->at(i+3));
+	}
+}
+
 void LogoGUI::readString(char *buf, int len)
 {
+	buf[0] = 0;
 	XEvent e;
 	XKeyPressedEvent *ke = (XKeyPressedEvent*) &e;
 	XButtonEvent *be = (XButtonEvent*) &e;
@@ -138,6 +152,7 @@ void LogoGUI::readString(char *buf, int len)
 				buf[++i] = 0;
 			}
 		} else if(e.type == ButtonPress) {
+			printf("ButtonPress");
 			if(be->x > 370 && be->y > 485)
 			{
 				break;
@@ -148,6 +163,9 @@ void LogoGUI::readString(char *buf, int len)
 					i = strlen(buf);
 				}
 			}
+		} else if(e.type == Expose) {
+			printf("Expose\n");
+			this->restore();
 		}
 		this->drawInterface(buf);
 		this->drawText(10, 497, buf);
@@ -180,6 +198,10 @@ void LogoGUI::fd(double len) {
 	ey = this->y + len * sin(ang);
 	printf("x=%f, y=%f, angle=%f\n", this->x, this->y, this->angle);
 	if(this->pen) {
+		this->lines->push_back(this->x);
+		this->lines->push_back(this->y);
+		this->lines->push_back(ex);
+		this->lines->push_back(ey);
 		XDrawLine(this->dpy, this->win, this->gc, this->x, this->y, ex, ey);
 		XFlush(this->dpy);
 	}
