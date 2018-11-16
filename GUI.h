@@ -10,6 +10,7 @@ class LogoGUI {
 		void pu();
 		void pd();
 		void reset();
+		void readString(char *buf, int len);
 	private:
 		double x, y;
 		int width, height;
@@ -20,5 +21,15 @@ class LogoGUI {
 		GC gc;
 		int blackColor;
 		int whiteColor;
+		void drawInterface(char *c);
+		void drawLine(int x1, int y1, int x2, int y2);
+		void drawCursor(char *txt);
+		Font font;
+		XFontStruct *fontstruct;
+		void drawText(int x, int y, const char *text);
+		char *log[5] = {NULL, NULL, NULL, NULL, NULL};
+		int nextLog = 0;
+		void drawLog();
+		void logStr(char *c);
 
 };
