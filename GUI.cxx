@@ -163,6 +163,7 @@ void LogoGUI::readString(char *buf, int len)
 	XKeyPressedEvent *ke = (XKeyPressedEvent*) &e;
 	XButtonEvent *be = (XButtonEvent*) &e;
 	char c;
+	char *drawbuf;
 	KeySym ks;
 	Status s;
 	XIM xim = XOpenIM(this->dpy, NULL, "x-logo", "x-logo");
@@ -176,8 +177,15 @@ void LogoGUI::readString(char *buf, int len)
 	while(1)
 	{
 		//draw the interface and the text
-		this->drawInterface(buf);
-		this->drawText(10, 497, buf);
+		drawbuf = buf;
+
+		// Make the command fit.
+		while(XTextWidth(this->fontstruct, drawbuf, strlen(drawbuf)) > 355 && *drawbuf)
+		{
+			drawbuf++;
+		}
+		this->drawInterface(drawbuf);
+		this->drawText(10, 497, drawbuf);
 		XFlush(this->dpy);
 		XNextEvent(this->dpy, &e);
 
