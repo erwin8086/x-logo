@@ -83,13 +83,26 @@ void LogoGUI::drawLine(int x1, int y1, int x2, int y2)
 void LogoGUI::drawInterface(char *c)
 {
 	XClearArea(this->dpy, this->win, 0 , 400, 400, 100, false);
+
+	// CMD history
 	this->drawLine(0, 400, 400, 400);
 	this->drawLine(0, 400, 0, 500);
 	this->drawLine(400, 400, 400, 500);
+
+	// CMD input
 	this->drawLine(0, 485, 400, 485);
 	this->drawLine(0, 499, 400, 499);
+
+	// Run Button
 	this->drawLine(370, 485, 370, 499);
 	this->drawText(371, 497, "RUN");
+
+	// CLEAR Button
+	this->drawLine(370, 485, 370, 470);
+	this->drawLine(370, 470, 400, 470);
+	this->drawLine(400, 485, 400, 470);
+	this->drawText(370, 482, "CLEAR");
+
 	this->drawLog();
 	this->drawCursor(c);
 }
@@ -190,6 +203,8 @@ void LogoGUI::readString(char *buf, int len)
 			if(be->x > 370 && be->y > 485) // RUN has selected
 			{
 				break;
+			} else if(be->x > 370 && be->y > 470 && be->y < 485) { // Clear
+				this->reset();
 			} else if(be->y < 493 && be->y > 405) { // a command in history
 				int index = (be->y - 405) / 15;
 				if(this->nextLog > index && strlen(this->log[index]) < len) {
