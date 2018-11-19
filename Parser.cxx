@@ -202,7 +202,7 @@ double Parser::nextNumber(const char *text, int *len)
 							}
 						}
 					} else {
-						res = atol(left);
+						res = atof(left);
 					}
 					free(left);
 					return res;
