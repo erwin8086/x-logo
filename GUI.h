@@ -12,6 +12,7 @@ class LogoGUI {
 		void pd();
 		void reset();
 		void readString(char *buf, int len);
+		void logStr(char *c);
 	private:
 		double x, y;
 		int width, height;
@@ -31,7 +32,6 @@ class LogoGUI {
 		char *log[5] = {NULL, NULL, NULL, NULL, NULL};
 		int nextLog = 0;
 		void drawLog();
-		void logStr(char *c);
 		std::vector<int> *lines;
 		void restore();
 

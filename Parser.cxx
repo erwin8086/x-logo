@@ -12,6 +12,7 @@
 #define TK_REPEAT 7
 #define TK_CLEAR 8
 #define TK_MAKE 9
+#define TK_PRINT 10
 
 Parser::Parser(const char* text, std::vector<struct var> *vars)
 {
@@ -84,6 +85,19 @@ void Parser::execute(LogoGUI *g)
 				}
 				this->vars->push_back(var);
 				break;
+			case TK_PRINT:
+				if(this->isStrNext())
+				{
+					cmd = this->nextString();
+					g->logStr(cmd);
+					free(cmd);
+				} else {
+					cmd = (char*) malloc(32);
+					strfromd(cmd, 32, "%f", this->nextNumber());
+					g->logStr(cmd);
+					free(cmd);
+				}
+				break;
 		}
 		// Wait 10ms and read next Command
 		struct timespec ti;
@@ -105,6 +119,7 @@ double Parser::nextNumber()
 char* Parser::nextString()
 {
 	while(*this->text == ' ' || *this->text == '\t') this->text++;
+	if(*this->text == '[') return this->nextCmdList();
 	if(*this->text != '"') return NULL;
 	const char *start = ++this->text;
 	while(*this->text && *this->text != ' ' &&
@@ -273,6 +288,16 @@ char* Parser::nextCmdList()
 	sub[this->text - start - 2] = 0;
 	return sub;
 }	
+
+bool Parser::isStrNext()
+{
+	int i=0;
+	while(this->text[i] && (this->text[i] == ' ' ||
+	      this->text[i] == '\t' || this->text[i] == '\n') ) i++;
+	printf("isStrNext: %c\n", this->text[i]);
+	if(this->text[i] == '"' || this->text[i] == '[') return true;
+	return false;
+}
 	
 // Interpret next thing as a command
 // no error checking
@@ -285,8 +310,16 @@ int Parser::nextToken()
 	{
 		case 'p':
 			if(b == 'u')
+			{
 				return TK_PU;
-			return TK_PD;
+			}
+			else if(b=='r')
+			{
+				this->text += 3;
+				return TK_PRINT;
+			} else {
+				return TK_PD;
+			}
 		case 'f':
 			return TK_FD;
 		case 'b':

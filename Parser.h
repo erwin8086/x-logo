@@ -18,5 +18,6 @@ class Parser {
 		double nextNumber(const char *text, int *len);
 		char* nextCmdList();
 		char* nextString();
+		bool isStrNext();
 		std::vector<struct var> *vars;
 };
