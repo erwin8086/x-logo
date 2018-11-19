@@ -11,10 +11,12 @@
 #define TK_PD 6
 #define TK_REPEAT 7
 #define TK_CLEAR 8
+#define TK_MAKE 9
 
-Parser::Parser(const char* text)
+Parser::Parser(const char* text, std::vector<struct var> *vars)
 {
 	this->text = text;
+	this->vars = vars;
 }
 
 // Execute text on a per command base
@@ -28,6 +30,8 @@ void Parser::execute(LogoGUI *g)
 {
 	int t = this->nextToken();
 	int rep, repcount;
+	int i;
+	struct var var;
 	char *cmd;
 	while(t)
 	{
@@ -57,7 +61,7 @@ void Parser::execute(LogoGUI *g)
 				cmd = this->nextCmdList();
 				repcount = 1;
 				while(rep-- > 0){
-					Parser *p = new Parser(cmd);
+					Parser *p = new Parser(cmd, this->vars);
 					p->repcount = repcount++;
 					p->execute(g);
 					delete p;
@@ -66,6 +70,19 @@ void Parser::execute(LogoGUI *g)
 				break;
 			case TK_CLEAR:
 				g->reset();
+				break;
+			case TK_MAKE:
+				var.name = this->nextString();
+				var.val = this->nextNumber();
+				for(i=0; i<this->vars->size(); i++)
+				{
+					if(strcmp(this->vars->at(i).name, var.name)==0)
+					{
+						this->vars->erase(this->vars->cbegin()+i);
+						break;
+					}
+				}
+				this->vars->push_back(var);
 				break;
 		}
 		// Wait 10ms and read next Command
@@ -83,6 +100,20 @@ double Parser::nextNumber()
 	double r = this->nextNumber(this->text, &len);
 	this->text += len;
 	return r;
+}
+
+char* Parser::nextString()
+{
+	while(*this->text == ' ' || *this->text == '\t') this->text++;
+	if(*this->text != '"') return NULL;
+	const char *start = ++this->text;
+	while(*this->text && *this->text != ' ' &&
+       	      *this->text != '\t' && *this->text != '\n') this->text++;
+	const char *end = this->text;
+	char *str = (char*) malloc(end - start + 1);
+	memcpy(str, start, end - start);
+	str[end - start] = 0;
+	return str;
 }
 
 double Parser::nextNumber(const char *text)
@@ -161,7 +192,15 @@ double Parser::nextNumber(const char *text, int *len)
 						{
 							printf("repcount");
 							res = this->repcount;
-						}	
+						} else {
+							for(i=0;i<this->vars->size(); i++)
+							{
+								if(strcmp(var, this->vars->at(i).name)==0)
+								{
+									res = this->vars->at(i).val;
+								}
+							}
+						}
 					} else {
 						res = atol(left);
 					}
@@ -262,6 +301,9 @@ int Parser::nextToken()
 		case 'c':
 			this->text += 3;
 			return TK_CLEAR;
+		case 'm':
+			this->text += 2;
+			return TK_MAKE;
 	}
 	return 0;
 }

@@ -6,10 +6,11 @@
 
 int main()
 {
+	std::vector<struct var> *vars = new std::vector<struct var>();
 	// the exampe program
 	const char* cmd = "repeat 8 [ repeat 4 [ fd 100 rt 90 ] rt 45 ]";
 	LogoGUI *g = new LogoGUI(400, 500);
-	Parser *p = new Parser(cmd);
+	Parser *p = new Parser(cmd, vars);
 	p->execute(g);
 	delete p;
 
@@ -21,7 +22,7 @@ int main()
 		next[255] = 0;
 		if(strcmp(next, "exit") == 0) // exit if "exit"
 			break;
-		Parser *p = new Parser(next);
+		Parser *p = new Parser(next, vars);
 		p->execute(g);
 		delete p;
 	}
