@@ -8,7 +8,7 @@ int main()
 {
 	std::vector<struct var> *vars = new std::vector<struct var>();
 	// the exampe program
-	const char* cmd = "repeat 8 [ repeat 4 [ fd 100 rt 90 ] rt 45 ]";
+	const char* cmd = "repeat 8 [ repeat 4 [ fd 100 rt 90 ] rt 45 ] print [repeat 20 [ make \"a :repcount * 5 + 20 repeat 8 [ repeat 4 [ fd :a rt 90 ] rt 45 ] ] ]";
 	LogoGUI *g = new LogoGUI(400, 500);
 	Parser *p = new Parser(cmd, vars);
 	p->execute(g);
