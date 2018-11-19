@@ -201,9 +201,12 @@ void LogoGUI::readString(char *buf, int len)
 				if(ks==XK_space) {
 					c = ' ';
 				}
-				printf("Keycode: %i, keysym: %i, char: %c\n", ke->keycode, ks, c);
-				buf[i] = c;
-				buf[++i] = 0;
+				if(c)
+				{
+					printf("Keycode: %i, keysym: %i, char: %c\n", ke->keycode, ks, c);
+					buf[i] = c;
+					buf[++i] = 0;
+				}
 			}
 		} else if(e.type == ButtonPress) {
 			// Process mouse click
