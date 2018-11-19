@@ -2,6 +2,7 @@
 #include<string.h>
 #include<time.h>
 #include"Parser.h"
+#include<stdio.h>
 #define TK_FD 1
 #define TK_BD 2
 #define TK_RT 3
@@ -26,7 +27,7 @@ Parser::Parser(const char* text)
 void Parser::execute(LogoGUI *g)
 {
 	int t = this->nextToken();
-	int rep;
+	int rep, repcount;
 	char *cmd;
 	while(t)
 	{
@@ -54,8 +55,10 @@ void Parser::execute(LogoGUI *g)
 			case TK_REPEAT:
 				rep = this->nextNumber();
 				cmd = this->nextCmdList();
+				repcount = 1;
 				while(rep-- > 0){
 					Parser *p = new Parser(cmd);
+					p->repcount = repcount++;
 					p->execute(g);
 					delete p;
 				}
@@ -74,27 +77,130 @@ void Parser::execute(LogoGUI *g)
 	}
 }
 
-// Interpret next thing as a number
-// Once again no error checking
 double Parser::nextNumber()
 {
-	char num[30];
-	int i=0;
-	while(*this->text == ' ' || *this->text == '\n') this->text++;
-	while( ((*this->text >= '0' && *this->text <= '9') || *this->text == '.' ) && i < 29) {
-		num[i] = *this->text;
-		i++;
-		this->text++;
-	}
-	if(i>0)
-	{
-		num[i] = 0;
-		return atol(num);
+	int len;
+	double r = this->nextNumber(this->text, &len);
+	this->text += len;
+	return r;
+}
 
-	} else {
-		// if its not a number return 0
-		return 0;
+double Parser::nextNumber(const char *text)
+{
+	return this->nextNumber(text, (int*)NULL);
+}
+
+// Interpret next thing as a number
+// Once again no error checking
+double Parser::nextNumber(const char *text, int *len)
+{
+	const char *startText = text;
+	char num[30];
+	const char *start;
+	const char *end;
+	const char *op;
+	char *left, *right;
+	double res;
+	int i=0;
+	while(*text == ' ' || *text == '\n' || *text == '\t') text++;
+	start = text;
+	while(*text >= '0' && *text <= '9' || *text == '.' ||
+              *text == '+' || *text == '-' || *text == '*' ||
+	      *text == '/' || *text == ' ' || *text == '\t' || *text == ':') 
+	{
+		if(*text == ':')
+		{
+			text++;
+			while(*text >= 'a' && *text <= 'z') text++;
+		} else {	
+			text++;
+		}
 	}
+	end = text - 1;
+	if(len)
+		*len = text - startText;
+	for(op=start; op <= end; op++)
+	{
+		if(*op=='+') break;
+	}
+	if(*op != '+')
+	{
+		for(op=start; op <= end; op++)
+		{
+			if(*op=='-') break;
+		}
+		if(*op != '-')
+		{
+			for(op=start; op <= end; op++)
+			{
+				if(*op=='*') break;
+			}
+			if(*op!='*')
+			{
+				for(op=start; op <= end; op++)
+				{
+					if(*op=='/') break;
+				}
+				if(*op!='/')
+				{
+					left = (char*) malloc(end - start + 2);
+					memcpy(left, start, end - start + 1);
+					left[end - start + 1] = 0;
+					if(*left == ':')
+					{
+						printf("Colon: %s", left);
+						char *var = left + 1;
+						for(i=0; i<(end-start+1); i++)
+						{
+							if(left[i] == ' ' || left[i] == '\t')
+							{
+								left[i] = 0;
+							}
+						}
+						if(strcmp(var, "repcount")==0)
+						{
+							printf("repcount");
+							res = this->repcount;
+						}	
+					} else {
+						res = atol(left);
+					}
+					free(left);
+					return res;
+
+				}
+			}
+		}
+	}
+	left  = (char*) malloc(op - start + 1);
+	right = (char*) malloc(end - op + 1);
+
+	memcpy(left, start, op - start);
+	memcpy(right, op + 1, end - op);
+
+	left[op - start] = 0;
+	right[end - op] = 0;
+
+	printf("Op: %c, left: %s, right: %s", *op, left, right);
+
+	switch(*op)
+	{
+		case '+':
+			res = this->nextNumber(left) + this->nextNumber(right);
+			break;
+		case '-':
+			res = this->nextNumber(left) - this->nextNumber(right);
+			break;
+		case '*':
+			res = this->nextNumber(left) * this->nextNumber(right);
+			break;
+		case '/':
+			res = this->nextNumber(left) / this->nextNumber(right);
+			break;
+	}
+	free(left);
+	free(right);
+	return res;
 }
 
 // Interpret next thing as a list of commands
