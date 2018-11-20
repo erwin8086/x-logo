@@ -24,7 +24,6 @@ Parser::Parser(const char* text, std::vector<struct var> *vars, bool delay)
 	this->text = text;
 	this->delay = delay;
 	this->vars = vars;
-	srand(time(NULL));
 }
 
 // Execute text on a per command base
@@ -290,6 +289,10 @@ double Parser::getFunc(const char *text)
 	else if(strcmp(funcName, ":equ")==0)
 	{
 		res = this->getFuncParam(&text) == this->getFuncParam(&text);
+	}
+	else if(strcmp(funcName, ":int")==0)
+	{
+		res = (int) this->getFuncParam(&text);
 	}
 	
 	free(funcName);
