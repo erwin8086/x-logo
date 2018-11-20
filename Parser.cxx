@@ -15,6 +15,7 @@
 #define TK_CLEAR 8
 #define TK_MAKE 9
 #define TK_PRINT 10
+#define TK_WHEN 11
 
 Parser::Parser(const char* text, std::vector<struct var> *vars)
 {
@@ -67,6 +68,17 @@ void Parser::execute(LogoGUI *g)
 				while(rep-- > 0){
 					Parser *p = new Parser(cmd, this->vars);
 					p->repcount = repcount++;
+					p->execute(g);
+					delete p;
+				}
+				free(cmd);
+				break;
+			case TK_WHEN:
+				rep = this->nextNumber();
+				cmd = this->nextCmdList();
+				if(rep > 0.001 || rep < -0.001)
+				{
+					Parser *p = new Parser(cmd, this->vars);
 					p->execute(g);
 					delete p;
 				}
@@ -465,6 +477,9 @@ int Parser::nextToken()
 		case 'm':
 			this->text += 2;
 			return TK_MAKE;
+		case 'w':
+			this->text += 2;
+			return TK_WHEN;
 	}
 	return 0;
 }
