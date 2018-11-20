@@ -41,8 +41,18 @@ LogoGUI::LogoGUI(int width, int height)
 	int nfonts;
 	char **fonts = XListFonts(this->dpy, "-*-fixed-*-*-*-*-12-*-*-*-*-*-*-*", 1, &nfonts);
 	assert(nfonts==1);
-	this->font = XLoadFont(this->dpy, fonts[0]);
 	this->fontstruct = XLoadQueryFont(this->dpy, fonts[0]);
+	if(!this->fontstruct)
+	{
+		XFreeFontNames(fonts);
+		fonts = XListFonts(this->dpy, "-*-fixed-*-*-*-*-*-*-*-*-*-*-*-*", 1, &nfonts);
+		assert(nfonts==1);
+		this->fontstruct = XLoadQueryFont(this->dpy, fonts[0]);
+		assert(this->fontstruct);
+		
+
+	}
+	this->font = XLoadFont(this->dpy, fonts[0]);
 	XFreeFontNames(fonts);
 
 	XSelectInput(this->dpy, this->win, StructureNotifyMask | KeyPressMask | ButtonPressMask | 
