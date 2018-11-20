@@ -142,7 +142,7 @@ void LogoGUI::logStr(char *c)
 	this->log[this->nextLog] = (char*) malloc(strlen(c) + 1);
 	strcpy(this->log[this->nextLog], c);
 	this->nextLog++;
-	this->drawLog();
+	this->drawInterface(NULL);
 	XFlush(this->dpy);
 }
 
