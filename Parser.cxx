@@ -18,6 +18,7 @@
 #define TK_WHEN 11
 #define TK_SLOW 12
 #define TK_FAST 13
+#define TK_LOAD 14
 
 Parser::Parser(const char* text, std::vector<struct var> *vars, bool delay)
 {
@@ -39,7 +40,8 @@ void Parser::execute(LogoGUI *g)
 	int rep, repcount;
 	int i;
 	struct var var;
-	char *cmd;
+	char *cmd, *fname, *buf;
+	FILE *f;
 	while(t)
 	{
 		// Execute the token in LogoGUI
@@ -121,6 +123,38 @@ void Parser::execute(LogoGUI *g)
 			case TK_SLOW:
 				this->delay = true;
 				break;
+			case TK_LOAD:
+				fname = this->nextString();
+				f = fopen(fname, "r");
+				free(fname);
+				assert(f);
+				buf = (char*) malloc(256);
+				cmd = NULL;
+				while(!feof(f))
+				{
+					size_t len = fread(buf, 1, 255, f);
+					buf[len] = 0;
+					if(cmd)
+					{
+						char *ncmd = (char*) malloc(strlen(buf) + strlen(cmd) + 1);
+						strcpy(ncmd, cmd);
+						strcat(ncmd, buf);
+						free(cmd);
+						cmd = ncmd;
+					} else {
+						cmd = buf;
+						buf = (char*) malloc(256);
+					}
+				}		
+				fclose(f);
+				free(buf);
+				{
+					Parser *p = new Parser(cmd, this->vars, this->delay);
+					p->execute(g);
+					delete p;
+				}
+				free(cmd);	
+				break;
 		}
 		// Wait 10ms and read next Command
 		if(this->delay)
@@ -133,6 +167,7 @@ void Parser::execute(LogoGUI *g)
 		t = this->nextToken();
 	}
 }
+
 
 bool Parser::getSpeed()
 {
@@ -505,7 +540,10 @@ int Parser::nextToken()
 			this->text += 4;
 			return TK_REPEAT;
 		case 'l':
-			return TK_LT;
+			if(b=='t')
+				return TK_LT;
+			this->text += 2;
+			return TK_LOAD;
 		case 'c':
 			this->text += 3;
 			return TK_CLEAR;
