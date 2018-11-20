@@ -19,5 +19,9 @@ class Parser {
 		char* nextCmdList();
 		char* nextString();
 		bool isStrNext();
+		void skipFunc(const char **text);
+		double getFunc(const char *text);
+		double getFuncParam(const char **text);
+		int numFuncParam(const char *text);
 		std::vector<struct var> *vars;
 };

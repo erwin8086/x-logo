@@ -3,6 +3,8 @@
 #include<time.h>
 #include"Parser.h"
 #include<stdio.h>
+#include<assert.h>
+#include<math.h>
 #define TK_FD 1
 #define TK_BD 2
 #define TK_RT 3
@@ -18,6 +20,7 @@ Parser::Parser(const char* text, std::vector<struct var> *vars)
 {
 	this->text = text;
 	this->vars = vars;
+	srand(time(NULL));
 }
 
 // Execute text on a per command base
@@ -136,6 +139,124 @@ double Parser::nextNumber(const char *text)
 	return this->nextNumber(text, (int*)NULL);
 }
 
+void Parser::skipFunc(const char **text)
+{
+	int depth;
+	if(**text == ':')
+	{
+		(*text)++;
+		while(**text && **text != ' ' && **text != '\t' && **text !='\n'
+		      && **text != '(') (*text)++;
+		if(**text == '(')
+		{
+			(*text)++;
+			depth = 1;
+			while(**text && depth > 0)
+			{
+				if(**text == ')') depth--;
+				if(**text == '(') depth++;
+				(*text)++;
+			}
+			assert(depth==0);
+		}
+		(*text)--;
+	}
+}
+
+double Parser::getFuncParam(const char **text)
+{
+	(*text)++;
+	const char *start = *text;
+	while(**text && **text != ')' && **text != ',')
+	{
+		this->skipFunc(text);
+		(*text)++;
+	}	
+	assert(**text);
+	char *param = (char*)malloc(*text - start + 1);
+	memcpy(param, start, *text - start);
+	param[*text - start] = 0;
+	double res = this->nextNumber(param);
+	free(param);
+	return res;
+
+}
+
+int Parser::numFuncParam(const char *text)
+{
+	int params = 0;
+	text++;
+	while(*text && *text != ')')
+	{
+		if(*text != ' ' && *text != '\t' && *text != '\n')
+		{
+			params++;
+			while(*text && *text != ',' && *text != ')')
+			{
+				this->skipFunc(&text);
+				text++;
+			}
+		}
+		text++;
+	}
+	return params;
+}
+
+double Parser::getFunc(const char *text)
+{
+	const char *start, *end;
+	char *funcName;
+	start = text;
+	while(*text && *text != '(') text++;
+	assert(*text == '(');
+	end = text;
+	funcName = (char*) malloc(end - start + 1);
+	memcpy(funcName, start, end - start);
+	funcName[end - start] = 0;
+	
+	printf("Getfunc: %s\n", funcName);
+
+	int params = this->numFuncParam(text);
+
+	double res = 0;
+	if(strcmp(funcName, ":mod")==0)
+	{
+		double a = this->getFuncParam(&text);
+		double b = this->getFuncParam(&text);
+		res = (int)a % (int)b;
+	}
+	else if(strcmp(funcName, ":sin")==0)
+	{
+		double a = this->getFuncParam(&text);
+		a *= 0.0174533;
+		res = sin(a);
+	}
+	else if(strcmp(funcName, ":cos")==0)
+	{
+		double a = this->getFuncParam(&text);
+		a *= 0.0174533;
+		res = cos(a);
+	}
+	else if(strcmp(funcName, ":random")==0)
+	{
+		res = (double)rand() / (double)RAND_MAX;
+		if(params == 1)
+		{
+			res *= this->getFuncParam(&text);
+		} else if(params == 2) {
+			double a = this->getFuncParam(&text);
+			double b = this->getFuncParam(&text);
+			res *= (b - a);
+			res += a;
+		}
+	}
+	
+	free(funcName);
+	return res;
+}
+
+
+
 // Interpret next thing as a number
 // Once again no error checking
 double Parser::nextNumber(const char *text, int *len)
@@ -147,44 +268,43 @@ double Parser::nextNumber(const char *text, int *len)
 	const char *op;
 	char *left, *right;
 	double res;
-	int i=0;
+	int i=0, depth;
 	while(*text == ' ' || *text == '\n' || *text == '\t') text++;
 	start = text;
 	while(*text >= '0' && *text <= '9' || *text == '.' ||
               *text == '+' || *text == '-' || *text == '*' ||
 	      *text == '/' || *text == ' ' || *text == '\t' || *text == ':') 
 	{
-		if(*text == ':')
-		{
-			text++;
-			while(*text >= 'a' && *text <= 'z') text++;
-		} else {	
-			text++;
-		}
+		this->skipFunc(&text);
+		text++;
 	}
 	end = text - 1;
 	if(len)
 		*len = text - startText;
 	for(op=start; op <= end; op++)
 	{
+		this->skipFunc(&op);
 		if(*op=='+') break;
 	}
 	if(*op != '+')
 	{
 		for(op=start; op <= end; op++)
 		{
+			this->skipFunc(&op);
 			if(*op=='-') break;
 		}
 		if(*op != '-')
 		{
 			for(op=start; op <= end; op++)
 			{
+				this->skipFunc(&op);
 				if(*op=='*') break;
 			}
 			if(*op!='*')
 			{
 				for(op=start; op <= end; op++)
 				{
+					this->skipFunc(&op);
 					if(*op=='/') break;
 				}
 				if(*op!='/')
@@ -194,15 +314,23 @@ double Parser::nextNumber(const char *text, int *len)
 					left[end - start + 1] = 0;
 					if(*left == ':')
 					{
-						printf("Colon: %s", left);
 						char *var = left + 1;
 						for(i=0; i<(end-start+1); i++)
 						{
-							if(left[i] == ' ' || left[i] == '\t')
+							if(left[i] == '(') // a function
+							{
+								res = this->getFunc(left);
+								free(left);
+								return res;
+							}
+
+							if(left[i] == ' ' || left[i] == '\t' || 
+							   left[i] == '\n')
 							{
 								left[i] = 0;
 							}
 						}
+
 						if(strcmp(var, "repcount")==0)
 						{
 							printf("repcount");
