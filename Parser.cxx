@@ -16,10 +16,13 @@
 #define TK_MAKE 9
 #define TK_PRINT 10
 #define TK_WHEN 11
+#define TK_SLOW 12
+#define TK_FAST 13
 
-Parser::Parser(const char* text, std::vector<struct var> *vars)
+Parser::Parser(const char* text, std::vector<struct var> *vars, bool delay)
 {
 	this->text = text;
+	this->delay = delay;
 	this->vars = vars;
 	srand(time(NULL));
 }
@@ -66,7 +69,7 @@ void Parser::execute(LogoGUI *g)
 				cmd = this->nextCmdList();
 				repcount = 1;
 				while(rep-- > 0){
-					Parser *p = new Parser(cmd, this->vars);
+					Parser *p = new Parser(cmd, this->vars, this->delay);
 					p->repcount = repcount++;
 					p->execute(g);
 					delete p;
@@ -78,7 +81,7 @@ void Parser::execute(LogoGUI *g)
 				cmd = this->nextCmdList();
 				if(rep > 0.001 || rep < -0.001)
 				{
-					Parser *p = new Parser(cmd, this->vars);
+					Parser *p = new Parser(cmd, this->vars, this->delay);
 					p->execute(g);
 					delete p;
 				}
@@ -113,14 +116,28 @@ void Parser::execute(LogoGUI *g)
 					free(cmd);
 				}
 				break;
+			case TK_FAST:
+				this->delay = false;
+				break;
+			case TK_SLOW:
+				this->delay = true;
+				break;
 		}
 		// Wait 10ms and read next Command
-		struct timespec ti;
-		ti.tv_sec = 0;
-		ti.tv_nsec = 10000000;
-		while(nanosleep(&ti, &ti));
+		if(this->delay)
+		{
+			struct timespec ti;
+			ti.tv_sec = 0;
+			ti.tv_nsec = 10000000;
+			while(nanosleep(&ti, &ti));
+		}
 		t = this->nextToken();
 	}
+}
+
+bool Parser::getSpeed()
+{
+	return this->delay;
 }
 
 double Parser::nextNumber()
@@ -261,6 +278,18 @@ double Parser::getFunc(const char *text)
 			res *= (b - a);
 			res += a;
 		}
+	}
+	else if(strcmp(funcName, ":gt")==0)
+	{
+		res = this->getFuncParam(&text) > this->getFuncParam(&text);
+	}
+	else if(strcmp(funcName, ":lt")==0)
+	{
+		res = this->getFuncParam(&text) < this->getFuncParam(&text);
+	}
+	else if(strcmp(funcName, ":equ")==0)
+	{
+		res = this->getFuncParam(&text) == this->getFuncParam(&text);
 	}
 	
 	free(funcName);
@@ -461,7 +490,11 @@ int Parser::nextToken()
 				return TK_PD;
 			}
 		case 'f':
-			return TK_FD;
+			if(b=='d')
+				return TK_FD;
+			this->text += 2;
+			return TK_FAST;
+
 		case 'b':
 			return TK_BD;
 		case 'r':
@@ -480,6 +513,10 @@ int Parser::nextToken()
 		case 'w':
 			this->text += 2;
 			return TK_WHEN;
+		case 's':
+			this->text += 2;
+			return TK_SLOW;
+
 	}
 	return 0;
 }

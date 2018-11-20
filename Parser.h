@@ -7,7 +7,8 @@ struct var {
 
 class Parser {
 	public:
-		Parser(const char* cmd, std::vector<struct var> *vars);
+		Parser(const char* cmd, std::vector<struct var> *vars, bool delay);
+		bool getSpeed();
 		void execute(LogoGUI *gui);
 		int repcount;
 	private:
@@ -24,4 +25,5 @@ class Parser {
 		double getFuncParam(const char **text);
 		int numFuncParam(const char *text);
 		std::vector<struct var> *vars;
+		bool delay;
 };

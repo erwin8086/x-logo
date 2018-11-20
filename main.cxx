@@ -10,9 +10,11 @@ int main()
 	// the exampe program
 	const char* cmd = "repeat 8 [ repeat 4 [ fd 100 rt 90 ] rt 45 ] print [repeat 20 [ make \"a :repcount * 5 + 20 repeat 8 [ repeat 4 [ fd :a rt 90 ] rt 45 ] ] ]";
 	LogoGUI *g = new LogoGUI(400, 500);
-	Parser *p = new Parser(cmd, vars);
+	Parser *p = new Parser(cmd, vars, true);
 	p->execute(g);
 	delete p;
+
+	bool speed = true;
 
 	// read the user program and execute
 	char* next = (char*) malloc(256);
@@ -22,8 +24,9 @@ int main()
 		next[255] = 0;
 		if(strcmp(next, "exit") == 0) // exit if "exit"
 			break;
-		Parser *p = new Parser(next, vars);
+		Parser *p = new Parser(next, vars, speed);
 		p->execute(g);
+		speed = p->getSpeed();
 		delete p;
 	}
 	free(next);
