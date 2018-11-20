@@ -174,7 +174,7 @@ void Parser::skipFunc(const char **text)
 	{
 		(*text)++;
 		while(**text && **text != ' ' && **text != '\t' && **text !='\n'
-		      && **text != '(') (*text)++;
+		      && **text != '(' && **text != ')' && **text != ',') (*text)++;
 		if(**text == '(')
 		{
 			(*text)++;
@@ -198,6 +198,7 @@ double Parser::getFuncParam(const char **text)
 	while(**text && **text != ')' && **text != ',')
 	{
 		this->skipFunc(text);
+		printf("skipFunc: %s\n", *text);
 		(*text)++;
 	}	
 	assert(**text);
@@ -242,8 +243,6 @@ double Parser::getFunc(const char *text)
 	memcpy(funcName, start, end - start);
 	funcName[end - start] = 0;
 	
-	printf("Getfunc: %s\n", funcName);
-
 	int params = this->numFuncParam(text);
 
 	double res = 0;
