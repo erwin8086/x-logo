@@ -31,11 +31,16 @@ class ParserState
 		bool isProc(const char *name);
 		void setProc(const char *name, const char *cmds);
 		const char* getProc(const char *name);
+		void push(double d);
+		double pop();
+		std::vector<double>* getStack();
+		void listProcs();
 	private:
 		PS_VARS *vars;
 		bool delay;
 		ParserState *parent;
 		PS_PROCS *procs;
+		std::vector<double> *stack;
 };
 
 #endif

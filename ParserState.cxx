@@ -9,14 +9,17 @@ ParserState::ParserState()
 	this->vars = new PS_VARS();
 	this->parent = NULL;
 	this->procs = new PS_PROCS();
+	this->stack = new std::vector<double>();
 }
 
 ParserState::ParserState(ParserState *parent)
 {
-	this->delay = parent->getDelay();
 	this->vars = new PS_VARS();
 	this->procs = new PS_PROCS();
 	this->parent = parent;
+	this->stack = this->parent->getStack();
+	this->delay = this->parent->getDelay();
+	this->parent->listProcs();
 }
 
 ParserState::~ParserState()
@@ -33,6 +36,7 @@ ParserState::~ParserState()
 	}
 	delete this->procs;
 	delete this->vars;
+	if(!parent) delete this->stack;
 }
 
 bool ParserState::getDelay()
@@ -111,7 +115,7 @@ void ParserState::setProc(const char *name, const char *cmds)
 	int i;
 	for(i=0; i<this->procs->size(); i++)
 	{
-		if(strcmp(this->procs->at(i).name, name))
+		if(strcmp(this->procs->at(i).name, name)==0)
 		{
 			free(this->procs->at(i).name);
 			free(this->procs->at(i).commands);
@@ -119,6 +123,15 @@ void ParserState::setProc(const char *name, const char *cmds)
 		}
 	}
 	this->procs->push_back(p);
+}
+
+void ParserState::listProcs()
+{
+	int i;
+	for(i=0; i<this->procs->size(); i++)
+	{
+		printf("to \"%s [ %s ]\n", this->procs->at(i).name, this->procs->at(i).commands);
+	}
 }
 
 bool ParserState::isProc(const char *name)
@@ -130,7 +143,9 @@ bool ParserState::isProc(const char *name)
 			return true;
 	}
 	if(this->parent)
+	{
 		return this->parent->isProc(name);
+	}
 	return false;
 }
 
@@ -145,4 +160,23 @@ const char* ParserState::getProc(const char *name)
 	if(this->parent)
 		return this->parent->getProc(name);
 	return NULL;
+}
+
+std::vector<double>* ParserState::getStack()
+{
+	return this->stack;
+}
+
+void ParserState::push(double d)
+{
+	this->stack->push_back(d);
+}
+
+double ParserState::pop()
+{
+	if(this->stack->size() < 1)
+		return 0;
+	double r = this->stack->back();
+	this->stack->pop_back();
+	return r;
 }

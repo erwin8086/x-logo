@@ -5,6 +5,7 @@
 #include<stdio.h>
 #include<assert.h>
 #include<math.h>
+#include<unistd.h>
 #define TK_FD 1
 #define TK_BD 2
 #define TK_RT 3
@@ -21,6 +22,8 @@
 #define TK_LOAD 14
 #define TK_TO 15
 #define TK_PROC 16
+#define TK_PUSH 17
+#define TK_SLEEP 18
 
 Parser::Parser(const char* text, ParserState *parserState)
 {
@@ -167,6 +170,14 @@ void Parser::execute(LogoGUI *g)
 					delete pS;
 				}
 				break;	
+			case TK_PUSH:
+				val = this->nextNumber();
+				this->parserState->push(val);
+				break;
+			case TK_SLEEP:
+				double val = this->nextNumber();
+				sleep((int)val);
+				break;
 		}
 		// Wait 10ms and read next Command
 		if(this->parserState->getDelay())
@@ -335,7 +346,10 @@ double Parser::getFunc(const char *text)
 	{
 		res = (int) this->getFuncParam(&text);
 	}
-	
+	else if(strcmp(funcName, ":pop")==0)
+	{
+		res = this->parserState->pop();
+	}	
 	free(funcName);
 	return res;
 }
@@ -534,6 +548,11 @@ int Parser::nextToken()
 	switch(a)
 	{
 		case 'p':
+			if(b == 'u' && *this->text == 's')
+			{
+				this->text += 2;
+				return TK_PUSH;
+			}
 			if(b == 'u')
 			{
 				return TK_PU;
@@ -573,6 +592,11 @@ int Parser::nextToken()
 			this->text += 2;
 			return TK_WHEN;
 		case 's':
+			if(*this->text == 'e')
+			{
+				this->text += 3;
+				return TK_SLEEP;
+			}
 			this->text += 2;
 			return TK_SLOW;
 		case 't':
