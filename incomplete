@@ -1,0 +1,8 @@
+make "w :int(:random(3,8))
+make "e :int(:random(3,8))
+to "rfd [ when :gt(:random(), 0.5) [ pu ] fd :pop() pd ]
+make "len 160 * 3.14159 / :e
+make "sub :len / 19
+to "muster [ repeat :w [ repeat :e [ push :len rfd rt 360 / :e ] rt 360 / :w ] ]
+clear
+repeat 20 [ muster make "len :len - :sub ] 
