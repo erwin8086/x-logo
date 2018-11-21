@@ -25,6 +25,7 @@ class Parser {
 		double getFuncParam(const char **text);
 		int numFuncParam(const char *text);
 		ParserState *parserState;
+		char *lastProc;
 };
 
 #endif

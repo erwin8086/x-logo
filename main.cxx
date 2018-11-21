@@ -31,5 +31,6 @@ int main()
 		p->execute(g);
 		delete p;
 	}
+	delete pS;
 	free(next);
 }

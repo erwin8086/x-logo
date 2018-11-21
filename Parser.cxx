@@ -19,6 +19,8 @@
 #define TK_SLOW 12
 #define TK_FAST 13
 #define TK_LOAD 14
+#define TK_TO 15
+#define TK_PROC 16
 
 Parser::Parser(const char* text, ParserState *parserState)
 {
@@ -42,6 +44,7 @@ void Parser::execute(LogoGUI *g)
 	double val;
 	char *cmd, *fname, *buf;
 	FILE *f;
+	const char *proc;
 	while(t)
 	{
 		// Execute the token in LogoGUI
@@ -148,6 +151,22 @@ void Parser::execute(LogoGUI *g)
 				}
 				free(cmd);	
 				break;
+			case TK_TO:
+				name = this->nextString();
+				cmd = this->nextCmdList();
+				this->parserState->setProc(name, cmd);
+				break;
+			case TK_PROC:
+				proc = this->parserState->getProc(this->lastProc);
+				if(proc)
+				{
+					ParserState *pS = new ParserState(this->parserState);
+					Parser *p = new Parser(proc, pS);
+					p->execute(g);
+					delete p;
+					delete pS;
+				}
+				break;	
 		}
 		// Wait 10ms and read next Command
 		if(this->parserState->getDelay())
@@ -493,6 +512,24 @@ bool Parser::isStrNext()
 int Parser::nextToken()
 {
 	while(*this->text == ' ' || *this->text == '\n') this->text++;
+
+	// check if it is a procedure
+	int i=0;
+	while(this->text[i] && this->text[i] != ' ' && 
+	      this->text[i] != '\n' && this->text[i] != '\t')
+		i++;
+	this->lastProc = (char*) malloc(i);
+	memcpy(this->lastProc, this->text, i);
+	this->lastProc[i] = 0;
+	printf("lastProc = %s\n", this->lastProc);
+	if(this->parserState->isProc(this->lastProc))
+	{
+		this->text += i;
+		return TK_PROC;
+	}
+	free(this->lastProc);
+	this->lastProc = NULL;
+
 	char a = *this->text; char b = *(++this->text); this->text++;
 	switch(a)
 	{
@@ -538,6 +575,8 @@ int Parser::nextToken()
 		case 's':
 			this->text += 2;
 			return TK_SLOW;
+		case 't':
+			return TK_TO;
 
 	}
 	return 0;
