@@ -1,5 +1,9 @@
 #include<X11/Xlib.h>
 #include<vector>
+
+#ifndef _GUI_H_
+#define _GUI_H_
+
 class LogoGUI {
 	public:
 		LogoGUI(int width, int height);
@@ -36,3 +40,4 @@ class LogoGUI {
 		void restore();
 
 };
+#endif

@@ -1,13 +1,13 @@
 #include"GUI.h"
+#include"ParserState.h"
 #include<vector>
-struct var {
-	char *name;
-	double val;
-};
+
+#ifndef _PARSER_H_
+#define _PARSER_H_
 
 class Parser {
 	public:
-		Parser(const char* cmd, std::vector<struct var> *vars, bool delay);
+		Parser(const char* cmd, ParserState *parserState);
 		bool getSpeed();
 		void execute(LogoGUI *gui);
 		int repcount;
@@ -24,6 +24,7 @@ class Parser {
 		double getFunc(const char *text);
 		double getFuncParam(const char **text);
 		int numFuncParam(const char *text);
-		std::vector<struct var> *vars;
-		bool delay;
+		ParserState *parserState;
 };
+
+#endif

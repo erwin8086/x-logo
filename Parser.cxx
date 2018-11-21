@@ -20,11 +20,10 @@
 #define TK_FAST 13
 #define TK_LOAD 14
 
-Parser::Parser(const char* text, std::vector<struct var> *vars, bool delay)
+Parser::Parser(const char* text, ParserState *parserState)
 {
 	this->text = text;
-	this->delay = delay;
-	this->vars = vars;
+	this->parserState = parserState;
 }
 
 // Execute text on a per command base
@@ -39,7 +38,8 @@ void Parser::execute(LogoGUI *g)
 	int t = this->nextToken();
 	int rep, repcount;
 	int i;
-	struct var var;
+	char *name;
+	double val;
 	char *cmd, *fname, *buf;
 	FILE *f;
 	while(t)
@@ -70,7 +70,7 @@ void Parser::execute(LogoGUI *g)
 				cmd = this->nextCmdList();
 				repcount = 1;
 				while(rep-- > 0){
-					Parser *p = new Parser(cmd, this->vars, this->delay);
+					Parser *p = new Parser(cmd, this->parserState);
 					p->repcount = repcount++;
 					p->execute(g);
 					delete p;
@@ -82,7 +82,7 @@ void Parser::execute(LogoGUI *g)
 				cmd = this->nextCmdList();
 				if(rep > 0.001 || rep < -0.001)
 				{
-					Parser *p = new Parser(cmd, this->vars, this->delay);
+					Parser *p = new Parser(cmd, this->parserState);
 					p->execute(g);
 					delete p;
 				}
@@ -92,17 +92,10 @@ void Parser::execute(LogoGUI *g)
 				g->reset();
 				break;
 			case TK_MAKE:
-				var.name = this->nextString();
-				var.val = this->nextNumber();
-				for(i=0; i<this->vars->size(); i++)
-				{
-					if(strcmp(this->vars->at(i).name, var.name)==0)
-					{
-						this->vars->erase(this->vars->cbegin()+i);
-						break;
-					}
-				}
-				this->vars->push_back(var);
+				name = this->nextString();
+				val = this->nextNumber();
+				this->parserState->setVar(name, val);
+				free(name);
 				break;
 			case TK_PRINT:
 				if(this->isStrNext())
@@ -118,10 +111,10 @@ void Parser::execute(LogoGUI *g)
 				}
 				break;
 			case TK_FAST:
-				this->delay = false;
+				this->parserState->setDelay(false);
 				break;
 			case TK_SLOW:
-				this->delay = true;
+				this->parserState->setDelay(true);
 				break;
 			case TK_LOAD:
 				fname = this->nextString();
@@ -149,7 +142,7 @@ void Parser::execute(LogoGUI *g)
 				fclose(f);
 				free(buf);
 				{
-					Parser *p = new Parser(cmd, this->vars, this->delay);
+					Parser *p = new Parser(cmd, this->parserState);
 					p->execute(g);
 					delete p;
 				}
@@ -157,7 +150,7 @@ void Parser::execute(LogoGUI *g)
 				break;
 		}
 		// Wait 10ms and read next Command
-		if(this->delay)
+		if(this->parserState->getDelay())
 		{
 			struct timespec ti;
 			ti.tv_sec = 0;
@@ -168,11 +161,6 @@ void Parser::execute(LogoGUI *g)
 	}
 }
 
-
-bool Parser::getSpeed()
-{
-	return this->delay;
-}
 
 double Parser::nextNumber()
 {
@@ -414,13 +402,7 @@ double Parser::nextNumber(const char *text, int *len)
 							printf("repcount");
 							res = this->repcount;
 						} else {
-							for(i=0;i<this->vars->size(); i++)
-							{
-								if(strcmp(var, this->vars->at(i).name)==0)
-								{
-									res = this->vars->at(i).val;
-								}
-							}
+							res = this->parserState->getVar(var);
 						}
 					} else {
 						res = atof(left);
