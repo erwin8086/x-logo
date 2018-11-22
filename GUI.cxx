@@ -94,6 +94,9 @@ void LogoGUI::drawInterface(char *c)
 {
 	XClearArea(this->dpy, this->win, 0 , 400, 400, 100, false);
 
+	this->drawLog();
+	XClearArea(this->dpy, this->win, 370 , 455, 400, 485, false);
+
 	// CMD history
 	this->drawLine(0, 400, 400, 400);
 	this->drawLine(0, 400, 0, 500);
@@ -119,7 +122,6 @@ void LogoGUI::drawInterface(char *c)
 	this->drawLine(400, 455, 400, 470);
 	this->drawText(370, 468, "STOP");
 
-	this->drawLog();
 	this->drawCursor(c);
 }
 
@@ -247,14 +249,12 @@ void LogoGUI::readString(char *buf, int len)
 				}
 				if(c)
 				{
-					printf("Keycode: %i, keysym: %i, char: %c\n", ke->keycode, ks, c);
 					buf[i] = c;
 					buf[++i] = 0;
 				}
 			}
 		} else if(e.type == ButtonPress) {
 			// Process mouse click
-			printf("ButtonPress");
 			if(be->x > 370 && be->y > 485) // RUN has selected
 			{
 				break;
@@ -268,7 +268,6 @@ void LogoGUI::readString(char *buf, int len)
 				}
 			}
 		} else if(e.type == Expose) { // Restore the window
-			printf("Expose\n");
 			this->restore();
 		}
 	}
@@ -301,7 +300,6 @@ void LogoGUI::fd(double len) {
 	double ang = this->angle * 0.0174533;
 	ex = this->x + len * cos(ang);
 	ey = this->y + len * sin(ang);
-	printf("x=%f, y=%f, angle=%f\n", this->x, this->y, this->angle);
 	if(this->pen) {
 		// Remember the lines
 		this->lines->push_back(this->x);

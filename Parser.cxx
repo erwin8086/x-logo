@@ -287,7 +287,6 @@ double Parser::getFuncParam(const char **text)
 	while(**text && **text != ')' && **text != ',')
 	{
 		this->skipFunc(text);
-		printf("skipFunc: %s\n", *text);
 		(*text)++;
 	}	
 	assert(**text);
@@ -467,7 +466,6 @@ double Parser::nextNumber(const char *text, int *len)
 
 						if(strcmp(var, "repcount")==0)
 						{
-							printf("repcount");
 							res = this->repcount;
 						} else {
 							res = this->parserState->getVar(var);
@@ -490,8 +488,6 @@ double Parser::nextNumber(const char *text, int *len)
 
 	left[op - start] = 0;
 	right[end - op] = 0;
-
-	printf("Op: %c, left: %s, right: %s", *op, left, right);
 
 	switch(*op)
 	{
@@ -660,7 +656,6 @@ int Parser::nextToken()
 	this->lastProc = (char*) malloc(i);
 	memcpy(this->lastProc, this->text, i);
 	this->lastProc[i] = 0;
-	printf("lastProc = %s\n", this->lastProc);
 	if(this->parserState->isProc(this->lastProc))
 	{
 		this->text += i;
