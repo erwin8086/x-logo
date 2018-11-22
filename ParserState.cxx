@@ -19,7 +19,6 @@ ParserState::ParserState(ParserState *parent)
 	this->parent = parent;
 	this->stack = this->parent->getStack();
 	this->delay = this->parent->getDelay();
-	this->parent->listProcs();
 }
 
 ParserState::~ParserState()
