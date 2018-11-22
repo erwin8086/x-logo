@@ -319,6 +319,8 @@ int Parser::numFuncParam(const char *text)
 	return params;
 }
 
+#define EXPECTPAR(x) { if(this->numFuncParam(text) != x) { this->outError("To many or to less parameters\n"); return 0; } }
+
 double Parser::getFunc(const char *text)
 {
 	const char *start, *end;
@@ -336,18 +338,21 @@ double Parser::getFunc(const char *text)
 	double res = 0;
 	if(strcmp(funcName, ":mod")==0)
 	{
+		EXPECTPAR(2);
 		double a = this->getFuncParam(&text);
 		double b = this->getFuncParam(&text);
 		res = (int)a % (int)b;
 	}
 	else if(strcmp(funcName, ":sin")==0)
 	{
+		EXPECTPAR(1);
 		double a = this->getFuncParam(&text);
 		a *= 0.0174533;
 		res = sin(a);
 	}
 	else if(strcmp(funcName, ":cos")==0)
 	{
+		EXPECTPAR(1);
 		double a = this->getFuncParam(&text);
 		a *= 0.0174533;
 		res = cos(a);
@@ -367,22 +372,27 @@ double Parser::getFunc(const char *text)
 	}
 	else if(strcmp(funcName, ":gt")==0)
 	{
+		EXPECTPAR(2);
 		res = this->getFuncParam(&text) > this->getFuncParam(&text);
 	}
 	else if(strcmp(funcName, ":lt")==0)
 	{
+		EXPECTPAR(2);
 		res = this->getFuncParam(&text) < this->getFuncParam(&text);
 	}
 	else if(strcmp(funcName, ":equ")==0)
 	{
+		EXPECTPAR(2);
 		res = this->getFuncParam(&text) == this->getFuncParam(&text);
 	}
 	else if(strcmp(funcName, ":int")==0)
 	{
+		EXPECTPAR(1);
 		res = (int) this->getFuncParam(&text);
 	}
 	else if(strcmp(funcName, ":pop")==0)
 	{
+		EXPECTPAR(0);
 		res = this->parserState->pop();
 	}	
 	free(funcName);
