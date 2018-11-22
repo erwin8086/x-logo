@@ -164,6 +164,14 @@ void LogoGUI::drawLog()
 	}
 }
 
+void LogoGUI::clearLog()
+{
+	int i;
+	for(i=0;i<this->nextLog;i++)
+		free(this->log[i]);
+	this->nextLog = 0;
+}
+
 // repaint everything
 void LogoGUI::restore()
 {

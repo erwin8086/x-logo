@@ -19,6 +19,7 @@ class LogoGUI {
 		void logStr(const char *c);
 		bool checkAbort();
 		void clearAbort();
+		void clearLog();
 	private:
 		double x, y;
 		int width, height;

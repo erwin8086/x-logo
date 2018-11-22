@@ -26,6 +26,7 @@
 #define TK_PROC 16
 #define TK_PUSH 17
 #define TK_SLEEP 18
+#define TK_CLEARCONSOLE 19
 
 #define EXPECTSTR {while(this->isSpace(*this->text)) this->text++; \
   if(!this->expectString(this->text)) { this->outError("[ERR] String expected\n"); return; }}
@@ -216,10 +217,13 @@ void Parser::execute()
 				break;
 			case TK_UNKNOWN:
 				buf = (char*) malloc(256);
-				sprintf(buf, "[ERR] Unknown token: %s\n", this->text);
+				snprintf(buf, 256, "[ERR] Unknown token: %s\n", this->text);
 				this->outError(buf);
 				free(buf);
 				return;
+			case TK_CLEARCONSOLE:
+				g->clearLog();
+				break;
 		}
 		// Wait 10ms and read next Command
 		if(this->parserState->getDelay())
@@ -236,11 +240,11 @@ void Parser::execute()
 void Parser::outError(const char *text)
 {
 	char *buf = (char*) malloc(strlen(text)+1);
-	strcpy(buf, text);
 	char *t = buf;
+	strcpy(buf, text);
 	while(*t)
 	{
-		if(*t == '\n') *t = 0;
+		if(*t == '\n') *t = '\0';
 		if(*t == '\t') *t = ' ';
 		t++;
 	}
@@ -664,6 +668,7 @@ struct cmd cmds[] = {
 	{"repeat", TK_REPEAT},	
 	{"lt", TK_LT},
 	{"load", TK_LOAD},
+	{"clearconsole", TK_CLEARCONSOLE}, // Must before clear to work
 	{"clear", TK_CLEAR},
 	{"make", TK_MAKE},
 	{"when", TK_WHEN},
@@ -683,7 +688,7 @@ int Parser::nextToken()
 	// check if it is a procedure
 	int i=0;
 	while(this->text[i] && !this->isSpace(this->text[i])) i++;
-	this->lastProc = (char*) malloc(i);
+	this->lastProc = (char*) malloc(i + 1);
 	memcpy(this->lastProc, this->text, i);
 	this->lastProc[i] = 0;
 	if(this->parserState->isProc(this->lastProc))
