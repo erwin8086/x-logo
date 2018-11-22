@@ -147,8 +147,16 @@ void Parser::execute(LogoGUI *g)
 				EXPECTSTR;
 				fname = this->nextString();
 				f = fopen(fname, "r");
+				if(!f)
+				{
+					buf = (char*) malloc(256);
+					sprintf(buf, "[ERR] File not found: %s\n", fname);
+					this->outError(buf);
+					free(buf);
+					free(fname);
+					return;
+				}	
 				free(fname);
-				assert(f);
 				buf = (char*) malloc(256);
 				cmd = NULL;
 				while(!feof(f))
