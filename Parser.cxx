@@ -6,6 +6,8 @@
 #include<assert.h>
 #include<math.h>
 #include<unistd.h>
+#define TK_UNKNOWN -1 
+#define TK_END 0
 #define TK_FD 1
 #define TK_BD 2
 #define TK_RT 3
@@ -24,6 +26,13 @@
 #define TK_PROC 16
 #define TK_PUSH 17
 #define TK_SLEEP 18
+
+#define EXPECTSTR {while(this->isSpace(*this->text)) this->text++; \
+  if(!this->expectString(this->text)) { this->outError("[ERR] String expected\n"); return; }}
+#define EXPECTNUM {while(this->isSpace(*this->text)) this->text++; \
+  if(!this->expectNumber(this->text)) { this->outError("[ERR] Number expected\n"); return; }}
+#define EXPECTCMD {while(this->isSpace(*this->text)) this->text++; \
+  if(!this->expectCmdList(this->text)) { this->outError("[ERR] CmdList expected\n"); return; }}
 
 Parser::Parser(const char* text, ParserState *parserState)
 {
@@ -54,15 +63,19 @@ void Parser::execute(LogoGUI *g)
 		switch(t)
 		{
 			case TK_FD:
+				EXPECTNUM;
 				g->fd(this->nextNumber());
 				break;
 			case TK_BD:
+				EXPECTNUM;
 				g->bd(this->nextNumber());
 				break;
 			case TK_RT:
+				EXPECTNUM;
 				g->rt(this->nextNumber());
 				break;
 			case TK_LT:
+				EXPECTNUM;
 				g->lt(this->nextNumber());
 				break;
 			case TK_PU:
@@ -72,7 +85,9 @@ void Parser::execute(LogoGUI *g)
 				g->pd();
 				break;
 			case TK_REPEAT:
+				EXPECTNUM;
 				rep = this->nextNumber();
+				EXPECTCMD;
 				cmd = this->nextCmdList();
 				repcount = 1;
 				while(rep-- > 0){
@@ -84,7 +99,9 @@ void Parser::execute(LogoGUI *g)
 				free(cmd);
 				break;
 			case TK_WHEN:
+				EXPECTNUM;
 				rep = this->nextNumber();
+				EXPECTCMD;
 				cmd = this->nextCmdList();
 				if(rep > 0.001 || rep < -0.001)
 				{
@@ -98,7 +115,9 @@ void Parser::execute(LogoGUI *g)
 				g->reset();
 				break;
 			case TK_MAKE:
+				EXPECTSTR;
 				name = this->nextString();
+				EXPECTNUM;
 				val = this->nextNumber();
 				this->parserState->setVar(name, val);
 				free(name);
@@ -106,11 +125,13 @@ void Parser::execute(LogoGUI *g)
 			case TK_PRINT:
 				if(this->isStrNext())
 				{
+					EXPECTSTR;
 					cmd = this->nextString();
 					g->logStr(cmd);
 					free(cmd);
 				} else {
 					cmd = (char*) malloc(32);
+					EXPECTNUM;
 					strfromd(cmd, 32, "%f", this->nextNumber());
 					g->logStr(cmd);
 					free(cmd);
@@ -123,6 +144,7 @@ void Parser::execute(LogoGUI *g)
 				this->parserState->setDelay(true);
 				break;
 			case TK_LOAD:
+				EXPECTSTR;
 				fname = this->nextString();
 				f = fopen(fname, "r");
 				free(fname);
@@ -155,7 +177,9 @@ void Parser::execute(LogoGUI *g)
 				free(cmd);	
 				break;
 			case TK_TO:
+				EXPECTSTR;
 				name = this->nextString();
+				EXPECTCMD;
 				cmd = this->nextCmdList();
 				this->parserState->setProc(name, cmd);
 				break;
@@ -171,13 +195,21 @@ void Parser::execute(LogoGUI *g)
 				}
 				break;	
 			case TK_PUSH:
+				EXPECTNUM;
 				val = this->nextNumber();
 				this->parserState->push(val);
 				break;
 			case TK_SLEEP:
-				double val = this->nextNumber();
+				EXPECTNUM;
+				val = this->nextNumber();
 				sleep((int)val);
 				break;
+			case TK_UNKNOWN:
+				buf = (char*) malloc(256);
+				sprintf(buf, "[ERR] Unknown token: %s\n", this->text);
+				this->outError(buf);
+				free(buf);
+				return;
 		}
 		// Wait 10ms and read next Command
 		if(this->parserState->getDelay())
@@ -189,6 +221,11 @@ void Parser::execute(LogoGUI *g)
 		}
 		t = this->nextToken();
 	}
+}
+
+void Parser::outError(const char *text)
+{
+	printf("%s", text);
 }
 
 
@@ -519,6 +556,100 @@ bool Parser::isStrNext()
 	if(this->text[i] == '"' || this->text[i] == '[') return true;
 	return false;
 }
+
+bool Parser::expectToken(const char *text, const char *expect)
+{
+	while(*expect)
+	{
+		if(*text != *expect || (!*text))
+			return false;
+		text++; expect++;
+	}
+	return true;
+}
+
+bool Parser::isSpace(char c)
+{
+	if(c == ' ' || c == '\t' || c == '\n')
+		return true;
+	return false;
+}
+
+bool Parser::expectCmdList(const char *text)
+{
+	if(*text != '[')
+		return false;
+	int depth = 1;
+	text++;
+	while(*text && depth)
+	{
+		if(*text == '[') depth++;
+		if(*text == ']') depth--;
+		text++;
+	}
+	if(depth == 0) return true;
+	return false;
+}
+
+bool Parser::expectString(const char *text)
+{
+	if(*text != '"' && *text != '[')
+		return false;
+	if(*text == '"' && *++text)
+		return true;
+	if(*text == '[')
+	{
+		text++;
+		int depth = 1;
+		while(depth && *text)
+		{
+			if(*text == '[') depth++;
+			if(*text == ']') depth--;
+			text++;
+		}
+		if(depth == 0)
+			return true;
+	}
+	return false;
+}
+
+bool Parser::expectNumber(const char *text)
+{
+	if( (*text >= '0' && *text <= '9') || *text == '.' || *text == '-')
+		if((*text == '.' || *text == '-') && *++text >= '0' && *text <= '9')
+			return true;
+		else if(*text >= '0' && *text <= '9')
+			return true;
+	if(*text == ':' && *++text && !this->isSpace(*text))
+		return true;
+	return false;
+}
+
+struct cmd {
+	const char *cmd;
+	int token;
+};
+
+struct cmd cmds[] = {
+	{"push", TK_PUSH},
+	{"pu", TK_PU},
+	{"pd", TK_PD},
+	{"print", TK_PRINT},
+	{"fd", TK_FD},
+	{"fast", TK_FAST},
+	{"bd", TK_BD},
+	{"rt", TK_RT},
+	{"repeat", TK_REPEAT},	
+	{"lt", TK_LT},
+	{"load", TK_LOAD},
+	{"clear", TK_CLEAR},
+	{"make", TK_MAKE},
+	{"when", TK_WHEN},
+	{"sleep", TK_SLEEP},
+	{"slow", TK_SLOW},
+	{"to", TK_TO},
+	{NULL, 0}
+};
 	
 // Interpret next thing as a command
 // no error checking
@@ -544,64 +675,17 @@ int Parser::nextToken()
 	free(this->lastProc);
 	this->lastProc = NULL;
 
-	char a = *this->text; char b = *(++this->text); this->text++;
-	switch(a)
+	if(! *text)
+		return TK_END;
+
+	for(i=0; cmds[i].cmd; i++)
 	{
-		case 'p':
-			if(b == 'u' && *this->text == 's')
-			{
-				this->text += 2;
-				return TK_PUSH;
-			}
-			if(b == 'u')
-			{
-				return TK_PU;
-			}
-			else if(b=='r')
-			{
-				this->text += 3;
-				return TK_PRINT;
-			} else {
-				return TK_PD;
-			}
-		case 'f':
-			if(b=='d')
-				return TK_FD;
-			this->text += 2;
-			return TK_FAST;
-
-		case 'b':
-			return TK_BD;
-		case 'r':
-			if(b == 't') 
-				return TK_RT;
-			this->text += 4;
-			return TK_REPEAT;
-		case 'l':
-			if(b=='t')
-				return TK_LT;
-			this->text += 2;
-			return TK_LOAD;
-		case 'c':
-			this->text += 3;
-			return TK_CLEAR;
-		case 'm':
-			this->text += 2;
-			return TK_MAKE;
-		case 'w':
-			this->text += 2;
-			return TK_WHEN;
-		case 's':
-			if(*this->text == 'e')
-			{
-				this->text += 3;
-				return TK_SLEEP;
-			}
-			this->text += 2;
-			return TK_SLOW;
-		case 't':
-			return TK_TO;
-
+		if(this->expectToken(text, cmds[i].cmd))
+		{
+			text += strlen(cmds[i].cmd);
+			return cmds[i].token;
+		}
 	}
-	return 0;
+
+	return TK_UNKNOWN;
 }

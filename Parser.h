@@ -12,6 +12,7 @@ class Parser {
 		void execute(LogoGUI *gui);
 		int repcount;
 	private:
+		void outError(const char *msg);
 		const char *text;
 		int nextToken();	
 		double nextNumber();
@@ -25,6 +26,11 @@ class Parser {
 		double getFuncParam(const char **text);
 		int numFuncParam(const char *text);
 		ParserState *parserState;
+		bool isSpace(char c);
+		bool expectString(const char *text);
+		bool expectNumber(const char *text);
+		bool expectCmdList(const char *text);
+		bool expectToken(const char *text, const char *expect);
 		char *lastProc;
 };
 
