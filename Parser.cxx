@@ -239,12 +239,11 @@ double Parser::nextNumber()
 
 char* Parser::nextString()
 {
-	while(*this->text == ' ' || *this->text == '\t') this->text++;
+	while(this->isSpace(*this->text)) this->text++;
 	if(*this->text == '[') return this->nextCmdList();
 	if(*this->text != '"') return NULL;
 	const char *start = ++this->text;
-	while(*this->text && *this->text != ' ' &&
-       	      *this->text != '\t' && *this->text != '\n') this->text++;
+	while(*this->text && !this->isSpace(*text)) this->text++;
 	const char *end = this->text;
 	char *str = (char*) malloc(end - start + 1);
 	memcpy(str, start, end - start);
@@ -263,7 +262,7 @@ void Parser::skipFunc(const char **text)
 	if(**text == ':')
 	{
 		(*text)++;
-		while(**text && **text != ' ' && **text != '\t' && **text !='\n'
+		while(**text && !this->isSpace(**text) 
 		      && **text != '(' && **text != ')' && **text != ',') (*text)++;
 		if(**text == '(')
 		{
@@ -307,7 +306,7 @@ int Parser::numFuncParam(const char *text)
 	text++;
 	while(*text && *text != ')')
 	{
-		if(*text != ' ' && *text != '\t' && *text != '\n')
+		if(!this->isSpace(*text))
 		{
 			params++;
 			while(*text && *text != ',' && *text != ')')
@@ -405,11 +404,11 @@ double Parser::nextNumber(const char *text, int *len)
 	char *left, *right;
 	double res;
 	int i=0, depth;
-	while(*text == ' ' || *text == '\n' || *text == '\t') text++;
+	while(this->isSpace(*text)) text++;
 	start = text;
 	while(*text >= '0' && *text <= '9' || *text == '.' ||
               *text == '+' || *text == '-' || *text == '*' ||
-	      *text == '/' || *text == ' ' || *text == '\t' || *text == ':') 
+	      this->isSpace(*text) || *text == ':') 
 	{
 		this->skipFunc(&text);
 		text++;
@@ -460,8 +459,7 @@ double Parser::nextNumber(const char *text, int *len)
 								return res;
 							}
 
-							if(left[i] == ' ' || left[i] == '\t' || 
-							   left[i] == '\n')
+							if(this->isSpace(left[i]))
 							{
 								left[i] = 0;
 							}
@@ -550,9 +548,7 @@ char* Parser::nextCmdList()
 bool Parser::isStrNext()
 {
 	int i=0;
-	while(this->text[i] && (this->text[i] == ' ' ||
-	      this->text[i] == '\t' || this->text[i] == '\n') ) i++;
-	printf("isStrNext: %c\n", this->text[i]);
+	while(this->text[i] && this->isSpace(this->text[i]) ) i++;
 	if(this->text[i] == '"' || this->text[i] == '[') return true;
 	return false;
 }
@@ -656,13 +652,11 @@ struct cmd cmds[] = {
 // reaaaa == repeat
 int Parser::nextToken()
 {
-	while(*this->text == ' ' || *this->text == '\n') this->text++;
+	while(this->isSpace(*this->text) ) this->text++;
 
 	// check if it is a procedure
 	int i=0;
-	while(this->text[i] && this->text[i] != ' ' && 
-	      this->text[i] != '\n' && this->text[i] != '\t')
-		i++;
+	while(this->text[i] && !this->isSpace(*this->text)) i++;
 	this->lastProc = (char*) malloc(i);
 	memcpy(this->lastProc, this->text, i);
 	this->lastProc[i] = 0;
