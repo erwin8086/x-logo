@@ -16,7 +16,7 @@ class LogoGUI {
 		void pd();
 		void reset();
 		void readString(char *buf, int len);
-		void logStr(char *c);
+		void logStr(const char *c);
 		bool checkAbort();
 		void clearAbort();
 	private:

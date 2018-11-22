@@ -7,9 +7,9 @@
 
 class Parser {
 	public:
-		Parser(const char* cmd, ParserState *parserState);
+		Parser(const char* cmd, ParserState *parserState, LogoGUI *gui);
 		bool getSpeed();
-		void execute(LogoGUI *gui);
+		void execute();
 		int repcount;
 	private:
 		void outError(const char *msg);
@@ -32,6 +32,7 @@ class Parser {
 		bool expectCmdList(const char *text);
 		bool expectToken(const char *text, const char *expect);
 		char *lastProc;
+		LogoGUI *gui;
 };
 
 #endif

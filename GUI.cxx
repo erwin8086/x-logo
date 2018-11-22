@@ -138,7 +138,7 @@ void LogoGUI::drawCursor(char *c)
 }
 
 // add last command to history
-void LogoGUI::logStr(char *c)
+void LogoGUI::logStr(const char *c)
 {
 	if(this->nextLog >= 5) {
 		free(this->log[0]);

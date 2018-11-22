@@ -13,8 +13,8 @@ int main()
 	const char* cmd = "repeat 8 [ repeat 4 [ fd 100 rt 90 ] rt 45 ] print [repeat 20 [ make \"a :repcount * 5 + 20 repeat 8 [ repeat 4 [ fd :a rt 90 ] rt 45 ] ] ] print [fast repeat 10000 [ fd :random(-10, 10) rt 90 * :int( :random(5) ) ] slow] print [make \"a :int( :random(3, 16) ) make \"b :int( :random(3, 16) ) repeat :a [ repeat :b [ fd 400 / :b rt 360 / :b ] rt 360 / :a ] ] print [fast repeat 80 [ make \"i :repcount repeat 35 [ fd :i rt 10 ] ] slow ] print [repeat 36 [ make \"len :repcount * 4 repeat 2 [ fd :len rt 90 fd :len / 2 rt 90 ] rt 10 ] ]";
 	LogoGUI *g = new LogoGUI(400, 500);
 	ParserState *pS = new ParserState();
-	Parser *p = new Parser(cmd, pS);
-	p->execute(g);
+	Parser *p = new Parser(cmd, pS, g);
+	p->execute();
 	delete p;
 
 	srand(time(NULL));
@@ -27,8 +27,8 @@ int main()
 		next[255] = 0;
 		if(strcmp(next, "exit") == 0) // exit if "exit"
 			break;
-		Parser *p = new Parser(next, pS);
-		p->execute(g);
+		Parser *p = new Parser(next, pS, g);
+		p->execute();
 		g->clearAbort();
 		delete p;
 	}

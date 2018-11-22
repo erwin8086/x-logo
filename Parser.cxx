@@ -34,10 +34,11 @@
 #define EXPECTCMD {while(this->isSpace(*this->text)) this->text++; \
   if(!this->expectCmdList(this->text)) { this->outError("[ERR] CmdList expected\n"); return; }}
 
-Parser::Parser(const char* text, ParserState *parserState)
+Parser::Parser(const char* text, ParserState *parserState, LogoGUI *gui)
 {
 	this->text = text;
 	this->parserState = parserState;
+	this->gui = gui;
 }
 
 // Execute text on a per command base
@@ -47,8 +48,9 @@ Parser::Parser(const char* text, ParserState *parserState)
 // it starts with a command
 // if command requires a parameter it is interpreted
 // no error checking anywhere here
-void Parser::execute(LogoGUI *g)
+void Parser::execute()
 {
+	LogoGUI *g = this->gui;
 	int t = this->nextToken();
 	int rep, repcount;
 	int i;
@@ -91,9 +93,9 @@ void Parser::execute(LogoGUI *g)
 				cmd = this->nextCmdList();
 				repcount = 1;
 				while(rep-- > 0){
-					Parser *p = new Parser(cmd, this->parserState);
+					Parser *p = new Parser(cmd, this->parserState, g);
 					p->repcount = repcount++;
-					p->execute(g);
+					p->execute();
 					delete p;
 				}
 				free(cmd);
@@ -105,8 +107,8 @@ void Parser::execute(LogoGUI *g)
 				cmd = this->nextCmdList();
 				if(rep > 0.001 || rep < -0.001)
 				{
-					Parser *p = new Parser(cmd, this->parserState);
-					p->execute(g);
+					Parser *p = new Parser(cmd, this->parserState, g);
+					p->execute();
 					delete p;
 				}
 				free(cmd);
@@ -178,8 +180,8 @@ void Parser::execute(LogoGUI *g)
 				fclose(f);
 				free(buf);
 				{
-					Parser *p = new Parser(cmd, this->parserState);
-					p->execute(g);
+					Parser *p = new Parser(cmd, this->parserState,g);
+					p->execute();
 					delete p;
 				}
 				free(cmd);	
@@ -196,8 +198,8 @@ void Parser::execute(LogoGUI *g)
 				if(proc)
 				{
 					ParserState *pS = new ParserState(this->parserState);
-					Parser *p = new Parser(proc, pS);
-					p->execute(g);
+					Parser *p = new Parser(proc, pS, g);
+					p->execute();
 					delete p;
 					delete pS;
 				}
@@ -233,7 +235,17 @@ void Parser::execute(LogoGUI *g)
 
 void Parser::outError(const char *text)
 {
-	printf("%s", text);
+	char *buf = (char*) malloc(strlen(text)+1);
+	strcpy(buf, text);
+	char *t = buf;
+	while(*t)
+	{
+		if(*t == '\n') *t = 0;
+		if(*t == '\t') *t = ' ';
+		t++;
+	}
+	this->gui->logStr(buf);
+	free(buf);
 }
 
 
