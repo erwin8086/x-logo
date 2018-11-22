@@ -17,6 +17,8 @@ class LogoGUI {
 		void reset();
 		void readString(char *buf, int len);
 		void logStr(char *c);
+		bool checkAbort();
+		void clearAbort();
 	private:
 		double x, y;
 		int width, height;
@@ -38,6 +40,7 @@ class LogoGUI {
 		void drawLog();
 		std::vector<int> *lines;
 		void restore();
+		bool abort = false;
 
 };
 #endif

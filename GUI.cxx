@@ -113,6 +113,12 @@ void LogoGUI::drawInterface(char *c)
 	this->drawLine(400, 485, 400, 470);
 	this->drawText(370, 482, "CLEAR");
 
+	// STOP Button
+	this->drawLine(370, 455, 370, 470);
+	this->drawLine(370, 455, 400, 455);
+	this->drawLine(400, 455, 400, 470);
+	this->drawText(370, 468, "STOP");
+
 	this->drawLog();
 	this->drawCursor(c);
 }
@@ -166,6 +172,32 @@ void LogoGUI::restore()
 			       this->lines->at(i+2), this->lines->at(i+3));
 	}
 }
+
+bool LogoGUI::checkAbort()
+{
+	if(this->abort) return true;
+	XEvent e;
+	XButtonEvent *be = (XButtonEvent *) &e;
+	while(XPending(this->dpy))
+	{
+		XNextEvent(this->dpy, &e);
+		if(e.type == ButtonPress)
+		{
+			if(be->x > 370 && be->y < 470 && be->y > 455)
+			{
+				this->abort = true;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+void LogoGUI::clearAbort()
+{
+	this->abort = false;
+}
+
 
 // read string and process events
 void LogoGUI::readString(char *buf, int len)

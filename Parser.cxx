@@ -57,7 +57,7 @@ void Parser::execute(LogoGUI *g)
 	char *cmd, *fname, *buf;
 	FILE *f;
 	const char *proc;
-	while(t)
+	while(t && !g->checkAbort())
 	{
 		// Execute the token in LogoGUI
 		switch(t)
@@ -408,7 +408,7 @@ double Parser::nextNumber(const char *text, int *len)
 	start = text;
 	while(*text >= '0' && *text <= '9' || *text == '.' ||
               *text == '+' || *text == '-' || *text == '*' ||
-	      this->isSpace(*text) || *text == ':') 
+	      *text == '/' || this->isSpace(*text) || *text == ':') 
 	{
 		this->skipFunc(&text);
 		text++;
@@ -656,7 +656,7 @@ int Parser::nextToken()
 
 	// check if it is a procedure
 	int i=0;
-	while(this->text[i] && !this->isSpace(*this->text)) i++;
+	while(this->text[i] && !this->isSpace(this->text[i])) i++;
 	this->lastProc = (char*) malloc(i);
 	memcpy(this->lastProc, this->text, i);
 	this->lastProc[i] = 0;

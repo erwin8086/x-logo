@@ -29,6 +29,7 @@ int main()
 			break;
 		Parser *p = new Parser(next, pS);
 		p->execute(g);
+		g->clearAbort();
 		delete p;
 	}
 	delete pS;
