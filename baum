@@ -1,0 +1,36 @@
+to "baum [
+  make "l :pop() / 4
+  fd :l rt 45
+  when :gt(:l,2) [ push :l * 2 ast ]
+  lt 45 fd :l lt 45
+  when :gt(:l,2) [ push :l * 2 ast ]
+  rt 45 fd :l rt 45
+  when :gt(:l,2) [ push :l * 2 ast ]
+  lt 45 fd :l lt 45
+  when :gt(:l,2) [ push :l * 2 ast ]
+  rt 45 fd :l bd :l * 5
+]
+to "ast [
+  make "l :pop()
+  when :lt(:random(), 0.8) [ push :l baum ]
+]
+to "wald [
+  make "r :pop() - 1
+  make "dir :random()
+  when :gt(:dir, 0.5) [ make "a :random(85, 120) ]
+  when :lt(:dir, 0.5001) [ make "a :random(265, 300) ]
+  make "d :random(50, 100)
+  rt :a
+  pu fd :d pd
+  lt :a
+  push 100 baum
+  when :gt(:r,1) [ push :r wald ]
+  when :gt(:r,1) [ push :r wald ]
+  rt :a
+  pu bd :d pd
+  lt :a
+]
+fast
+clear push 100 baum  
+sleep 5
+clear push 4 wald 
