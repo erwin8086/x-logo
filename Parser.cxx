@@ -359,6 +359,9 @@ double Parser::getFunc(const char *text)
 	
 	int params = this->numFuncParam(text);
 
+	time_t timep = time(NULL);
+	struct tm *t = localtime(&timep);
+
 	double res = 0;
 	if(strcmp(funcName, ":mod")==0)
 	{
@@ -419,6 +422,49 @@ double Parser::getFunc(const char *text)
 		EXPECTPAR(0);
 		res = this->parserState->pop();
 	}	
+	else if(strcmp(funcName, ":year")==0)
+	{
+		EXPECTPAR(0);
+		res = t->tm_year + 1900;
+	}
+	else if(strcmp(funcName, ":mon")==0)
+	{
+		EXPECTPAR(0);
+		res = t->tm_mon + 1;
+	}
+	else if(strcmp(funcName, ":day")==0)
+	{
+		if(params == 0)
+		{
+			res = t->tm_mday;
+		} else {
+			int sel = (int) this->getFuncParam(&text);
+			switch(sel)
+			{
+				case 0:
+					res = t->tm_wday;
+					break;
+				case 1:
+					res = t->tm_mday;
+					break;
+				case 2:
+					res = t->tm_yday;
+					break;
+			}
+		}
+	}
+	else if(strcmp(funcName, ":hour")==0)
+	{
+		res = t->tm_hour;
+	}
+	else if(strcmp(funcName, ":min")==0)
+	{
+		res = t->tm_min;
+	}
+	else if(strcmp(funcName, ":sec")==0)
+	{
+		res = t->tm_sec;
+	}
 	free(funcName);
 	return res;
 }
