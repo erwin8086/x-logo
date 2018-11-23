@@ -27,6 +27,7 @@
 #define TK_PUSH 17
 #define TK_SLEEP 18
 #define TK_CLEARCONSOLE 19
+#define TK_WHILE 20
 
 #define EXPECTSTR {while(this->isSpace(*this->text)) this->text++; \
   if(!this->expectString(this->text)) { this->outError("[ERR] String expected\n"); return; }}
@@ -60,6 +61,7 @@ void Parser::execute()
 	char *cmd, *fname, *buf;
 	FILE *f;
 	const char *proc;
+	const char *oldtext, *newtext;
 	while(t && !g->checkAbort())
 	{
 		// Execute the token in LogoGUI
@@ -93,7 +95,7 @@ void Parser::execute()
 				EXPECTCMD;
 				cmd = this->nextCmdList();
 				repcount = 1;
-				while(rep-- > 0){
+				while(rep-- > 0 && !g->checkAbort()){
 					Parser *p = new Parser(cmd, this->parserState, g);
 					p->repcount = repcount++;
 					p->execute();
@@ -223,6 +225,24 @@ void Parser::execute()
 				return;
 			case TK_CLEARCONSOLE:
 				g->clearLog();
+				break;
+			case TK_WHILE:
+				EXPECTNUM;
+				oldtext = this->text;
+				val = this->nextNumber();
+				EXPECTCMD;
+				cmd = this->nextCmdList();
+				newtext = this->text;
+				while(val && !g->checkAbort())
+				{
+					Parser *p = new Parser(cmd, this->parserState, g);
+					p->execute();
+					delete p;
+					this->text = oldtext;
+					val = this->nextNumber();
+				}
+				this->text = newtext;
+				free(cmd);
 				break;
 		}
 		// Wait 10ms and read next Command
@@ -721,6 +741,7 @@ struct cmd cmds[] = {
 	{"sleep", TK_SLEEP},
 	{"slow", TK_SLOW},
 	{"to", TK_TO},
+	{"while", TK_WHILE},
 	{NULL, 0}
 };
 	

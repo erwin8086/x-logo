@@ -10,4 +10,4 @@ to "clock [
   rt :sa fd 120 bd 120 lt :sa
 ]
 
-fast repeat 120 [ clock sleep 1 clear ]
+fast while 1 [ clear clock sleep 1 ]
