@@ -432,6 +432,11 @@ double Parser::getFunc(const char *text)
 		EXPECTPAR(2);
 		res = this->getFuncParam(&text) == this->getFuncParam(&text);
 	}
+	else if(strcmp(funcName, ":not")==0)
+	{
+		EXPECTPAR(1);
+		res = ! this->getFuncParam(&text);
+	}
 	else if(strcmp(funcName, ":int")==0)
 	{
 		EXPECTPAR(1);
