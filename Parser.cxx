@@ -28,6 +28,7 @@
 #define TK_SLEEP 18
 #define TK_CLEARCONSOLE 19
 #define TK_WHILE 20
+#define TK_COLOR 21
 
 #define EXPECTSTR {while(this->isSpace(*this->text)) this->text++; \
   if(!this->expectString(this->text)) { this->outError("[ERR] String expected\n"); return; }}
@@ -55,7 +56,7 @@ void Parser::execute()
 	LogoGUI *g = this->gui;
 	int t = this->nextToken();
 	int rep, repcount;
-	int i;
+	int i, red, green, blue;
 	char *name;
 	double val;
 	char *cmd, *fname, *buf;
@@ -244,6 +245,16 @@ void Parser::execute()
 				this->text = newtext;
 				free(cmd);
 				break;
+			case TK_COLOR:
+				EXPECTNUM;
+				red = (int) this->nextNumber();
+				EXPECTNUM;
+				green = (int) this->nextNumber();
+				EXPECTNUM;
+				blue = (int) this->nextNumber();
+				g->setColor(red, green, blue);
+				break;	
+				
 		}
 		// Wait 10ms and read next Command
 		if(this->parserState->getDelay())
@@ -307,7 +318,9 @@ void Parser::skipFunc(const char **text)
 	{
 		(*text)++;
 		while(**text && !this->isSpace(**text) 
-		      && **text != '(' && **text != ')' && **text != ',') (*text)++;
+		      && **text != '(' && **text != ')' && **text != ','
+		      && **text != '+' && **text != '-' &&
+                         **text != '*' && **text != '/') (*text)++;
 		if(**text == '(')
 		{
 			(*text)++;
@@ -510,10 +523,33 @@ double Parser::nextNumber(const char *text, int *len)
 	int i=0, depth;
 	while(this->isSpace(*text)) text++;
 	start = text;
+	bool wasSpace = false;
+	bool wasOp = false;
 	while(*text >= '0' && *text <= '9' || *text == '.' ||
               *text == '+' || *text == '-' || *text == '*' ||
 	      *text == '/' || this->isSpace(*text) || *text == ':') 
 	{
+		if(this->isSpace(*text))
+		{
+			wasSpace = true;
+		}
+		else if(*text == '+' || *text == '-' ||
+	            *text == '*' || *text == '/') 
+		{
+			wasSpace=false;
+			wasOp = true;
+		}
+		else if(((*text >=0 && *text <= '9') ||
+                        *text == ':') && wasOp)
+		{
+			wasSpace = false;
+			wasOp = false;
+		}
+		else if(wasSpace && ((*text >=0 && *text <= '9') ||
+                        *text == ':'))
+		{
+			break;
+		}
 		this->skipFunc(&text);
 		text++;
 	}
@@ -747,6 +783,7 @@ struct cmd cmds[] = {
 	{"slow", TK_SLOW},
 	{"to", TK_TO},
 	{"while", TK_WHILE},
+	{"color", TK_COLOR},
 	{NULL, 0}
 };
 	

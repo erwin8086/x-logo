@@ -55,6 +55,13 @@ LogoGUI::LogoGUI(int width, int height)
 	this->font = XLoadFont(this->dpy, fonts[0]);
 	XFreeFontNames(fonts);
 
+	// Create color information
+	this->colors = new std::vector<XColor>();
+	this->colormap = DefaultColormap(this->dpy, DefaultScreen(this->dpy));
+	this->curColor = this->whiteColor;
+	this->linecolors = new std::vector<unsigned long>();
+
+
 	XSelectInput(this->dpy, this->win, StructureNotifyMask | KeyPressMask | ButtonPressMask | 
 			ExposureMask);
 	XMapWindow(this->dpy, this->win);
@@ -74,6 +81,17 @@ void LogoGUI::reset()
 {
 	if(this->lines) delete this->lines;
 	this->lines = new std::vector<int>();
+	int i;
+	for(i=0;i<this->colors->size();i++)
+	{
+		unsigned long pixel = this->colors->at(i).pixel;
+		XFreeColors(this->dpy, this->colormap, &pixel, 1 , 0);
+	}
+	delete this->colors;
+	delete this->linecolors;
+	this->linecolors = new std::vector<unsigned long>();
+	this->colors = new std::vector<XColor>();
+	this->curColor = this->whiteColor;
 	this->x = this->width / 2;
 	this->y = (this->height - 100) / 2;
 	this->pen = true;
@@ -81,6 +99,30 @@ void LogoGUI::reset()
 	XClearWindow(this->dpy, this->win);
 	this->drawInterface(NULL);
 	XFlush(this->dpy);
+}
+
+void LogoGUI::setColor(int r, int g, int b)
+{
+	r *= 256;
+	g *= 256;
+	b *= 256;
+	int i;
+	XColor c;
+	for(i=0;i<this->colors->size();i++)
+	{
+		c = this->colors->at(i);
+		if(c.red == r && c.green == g && c.blue == b)
+		{
+			this->curColor = c.pixel;
+			return;
+		}
+	}	
+	c.red = r;
+	c.green = g;
+	c.blue = b;
+	XAllocColor(this->dpy, this->colormap, &c);
+	this->colors->push_back(c);
+	this->curColor = c.pixel;
 }
 
 // draw line to main window
@@ -92,6 +134,8 @@ void LogoGUI::drawLine(int x1, int y1, int x2, int y2)
 // draw the interface at the bottom of the window
 void LogoGUI::drawInterface(char *c)
 {
+	XSetForeground(this->dpy, this->gc, this->whiteColor);
+
 	XClearArea(this->dpy, this->win, 0 , 400, 400, 100, false);
 
 	this->drawLog();
@@ -123,6 +167,8 @@ void LogoGUI::drawInterface(char *c)
 	this->drawText(370, 468, "STOP");
 
 	this->drawCursor(c);
+	
+	XSetForeground(this->dpy, this->gc, this->curColor);
 }
 
 // draw input cursor
@@ -178,6 +224,7 @@ void LogoGUI::restore()
 	int i;
 	for(i=0; i < this->lines->size(); i+=4)
 	{
+		XSetForeground(this->dpy, this->gc, this->linecolors->at(i/4));
 		XDrawLine(this->dpy, this->win, this->gc, this->lines->at(i), this->lines->at(i+1),
 			       this->lines->at(i+2), this->lines->at(i+3));
 	}
@@ -211,7 +258,8 @@ void LogoGUI::clearAbort()
 
 // read string and process events
 void LogoGUI::readString(char *buf, int len)
-{
+{ 
+	
 	buf[0] = 0;
 	XEvent e;
 	XKeyPressedEvent *ke = (XKeyPressedEvent*) &e;
@@ -239,7 +287,9 @@ void LogoGUI::readString(char *buf, int len)
 			drawbuf++;
 		}
 		this->drawInterface(drawbuf);
+		XSetForeground(this->dpy, this->gc, this->whiteColor);
 		this->drawText(10, 497, drawbuf);
+		XSetForeground(this->dpy, this->gc, this->curColor);
 		XFlush(this->dpy);
 		XNextEvent(this->dpy, &e);
 
@@ -309,6 +359,8 @@ void LogoGUI::fd(double len) {
 	ex = this->x + len * cos(ang);
 	ey = this->y + len * sin(ang);
 	if(this->pen) {
+		this->linecolors->push_back(this->curColor);
+	 	XSetForeground(this->dpy, this->gc, this->curColor);
 		// Remember the lines
 		this->lines->push_back(this->x);
 		this->lines->push_back(this->y);

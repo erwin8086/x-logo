@@ -20,6 +20,7 @@ class LogoGUI {
 		bool checkAbort();
 		void clearAbort();
 		void clearLog();
+		void setColor(int r, int g, int b);
 	private:
 		double x, y;
 		int width, height;
@@ -40,7 +41,11 @@ class LogoGUI {
 		int nextLog = 0;
 		void drawLog();
 		std::vector<int> *lines;
+		std::vector<unsigned long> *linecolors;
 		void restore();
+		Colormap colormap;
+		std::vector<XColor> *colors;
+		unsigned long curColor;
 		bool abort = false;
 
 };

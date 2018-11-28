@@ -1,0 +1,12 @@
+to "circle [ make "s :pop() make "l :s * 2 * 3.14159 / 36 pu fd :s rt 90 bd :l / 2 pd repeat 36 [ rt 5 fd :l rt 5 ] fd :l / 2 lt 90 pu bd :s pd ]
+to "frac [
+ make "r :pop()
+ make "g :pop()
+ make "b :pop()
+ make "l :pop() push :l color :r :g :b circle make "nl :l / 2 when :gt(:nl,3) [rt 90 pu fd :l pd lt 90 
+ push :nl push :b / 2 push :g push :r frac 
+ pu rt 90 bd :l * 2 pd lt 90
+ push :nl push :b push :g push :r / 2 frac 
+ rt 90 pu fd :l lt 90 bd :l push :nl
+ push :b push :g / 2 push :r frac pu fd :l pd ] ]
+clear push 100 push 255 push 255 push 255 frac
