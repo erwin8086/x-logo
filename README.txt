@@ -45,6 +45,7 @@ commands are:
 -> make <string> <number> : defines the variable
    <string> as <number>
 -> push <number> : push <number> to stack
+-> color <red> <green> <blue>: set color to the rgb code.
 
 functions:
 -> :mod(<number 1>, <number 2>)
@@ -70,7 +71,7 @@ functions:
 -> :equ(<number 1>, <number 2>)
    returns 1 if <number 1> equlas <number 2>
    in other cases it returns 0
--> :not(<number>
+-> :not(<number>)
    returns 1 if <number> equals 0
    in other cases it returns 0
 -> :int(<number>)
