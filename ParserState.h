@@ -5,6 +5,7 @@
 
 #define PS_VARS std::vector<struct var>
 #define PS_PROCS std::vector<struct proc>
+#define PS_STRVARS std::vector<struct strVar>
 
 struct var {
         char *name;
@@ -14,6 +15,11 @@ struct var {
 struct proc {
 	char *name;
 	char *commands;
+};
+
+struct strVar {
+	char *name;
+	char *val;
 };
 
 class ParserState
@@ -35,12 +41,17 @@ class ParserState
 		double pop();
 		std::vector<double>* getStack();
 		void listProcs();
+		bool isStrVar(const char *name);
+		const char* getStrVar(const char *name);
+		void setStrVar(const char *name, const char *value);
 	private:
 		PS_VARS *vars;
 		bool delay;
 		ParserState *parent;
 		PS_PROCS *procs;
 		std::vector<double> *stack;
+		PS_STRVARS *strVars;	
+
 };
 
 #endif

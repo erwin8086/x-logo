@@ -29,13 +29,14 @@
 #define TK_CLEARCONSOLE 19
 #define TK_WHILE 20
 #define TK_COLOR 21
+#define TK_MAKESTR 22
 
 #define EXPECTSTR {while(this->isSpace(*this->text)) this->text++; \
-  if(!this->expectString(this->text)) { this->outError("[ERR] String expected\n"); return; }}
+	if(!this->expectString(this->text)) { this->outError("[ERR] String expected\n"); return; }}
 #define EXPECTNUM {while(this->isSpace(*this->text)) this->text++; \
-  if(!this->expectNumber(this->text)) { this->outError("[ERR] Number expected\n"); return; }}
+	if(!this->expectNumber(this->text)) { this->outError("[ERR] Number expected\n"); return; }}
 #define EXPECTCMD {while(this->isSpace(*this->text)) this->text++; \
-  if(!this->expectCmdList(this->text)) { this->outError("[ERR] CmdList expected\n"); return; }}
+	if(!this->expectCmdList(this->text)) { this->outError("[ERR] CmdList expected\n"); return; }}
 
 Parser::Parser(const char* text, ParserState *parserState, LogoGUI *gui)
 {
@@ -254,7 +255,16 @@ void Parser::execute()
 				blue = (int) this->nextNumber();
 				g->setColor(red, green, blue);
 				break;	
-				
+			case TK_MAKESTR:
+				EXPECTSTR;
+				name = this->nextString();
+				EXPECTSTR;
+				buf = this->nextString();
+				this->parserState->setStrVar(name, buf);
+				free(buf);
+				free(name);
+				break;
+
 		}
 		// Wait 10ms and read next Command
 		if(this->parserState->getDelay())
@@ -295,14 +305,30 @@ double Parser::nextNumber()
 char* Parser::nextString()
 {
 	while(this->isSpace(*this->text)) this->text++;
-	if(*this->text == '[') return this->nextCmdList();
-	if(*this->text != '"') return NULL;
+	char type = *this->text;
+	if(type == '[') return this->nextCmdList();
+	if(type != '"' && type != '$') return NULL;
 	const char *start = ++this->text;
 	while(*this->text && !this->isSpace(*text)) this->text++;
 	const char *end = this->text;
 	char *str = (char*) malloc(end - start + 1);
 	memcpy(str, start, end - start);
 	str[end - start] = 0;
+	if(type=='$')
+	{
+		if(!this->parserState->isStrVar(str))
+		{
+			char *buf = (char*) malloc(256);
+			snprintf(buf, 256, "Unknown string variable: %s\n", str);
+			this->outError(buf);
+			free(buf);
+		}
+		const char *res = this->parserState->getStrVar(str);
+		free(str);
+		if(!res) res = "";
+		str = (char*) malloc(strlen(res)+1);
+		strcpy(str, res);
+	}
 	return str;
 }
 
@@ -318,9 +344,9 @@ void Parser::skipFunc(const char **text)
 	{
 		(*text)++;
 		while(**text && !this->isSpace(**text) 
-		      && **text != '(' && **text != ')' && **text != ','
-		      && **text != '+' && **text != '-' &&
-                         **text != '*' && **text != '/') (*text)++;
+				&& **text != '(' && **text != ')' && **text != ','
+				&& **text != '+' && **text != '-' &&
+				**text != '*' && **text != '/') (*text)++;
 		if(**text == '(')
 		{
 			(*text)++;
@@ -389,7 +415,7 @@ double Parser::getFunc(const char *text)
 	funcName = (char*) malloc(end - start + 1);
 	memcpy(funcName, start, end - start);
 	funcName[end - start] = 0;
-	
+
 	int params = this->numFuncParam(text);
 
 	time_t timep = time(NULL);
@@ -526,27 +552,27 @@ double Parser::nextNumber(const char *text, int *len)
 	bool wasSpace = false;
 	bool wasOp = false;
 	while(*text >= '0' && *text <= '9' || *text == '.' ||
-              *text == '+' || *text == '-' || *text == '*' ||
-	      *text == '/' || this->isSpace(*text) || *text == ':') 
+			*text == '+' || *text == '-' || *text == '*' ||
+			*text == '/' || this->isSpace(*text) || *text == ':') 
 	{
 		if(this->isSpace(*text))
 		{
 			wasSpace = true;
 		}
 		else if(*text == '+' || *text == '-' ||
-	            *text == '*' || *text == '/') 
+				*text == '*' || *text == '/') 
 		{
 			wasSpace=false;
 			wasOp = true;
 		}
 		else if(((*text >=0 && *text <= '9') ||
-                        *text == ':') && wasOp)
+					*text == ':') && wasOp)
 		{
 			wasSpace = false;
 			wasOp = false;
 		}
 		else if(wasSpace && ((*text >=0 && *text <= '9') ||
-                        *text == ':'))
+					*text == ':'))
 		{
 			break;
 		}
@@ -686,7 +712,7 @@ bool Parser::isStrNext()
 {
 	int i=0;
 	while(this->text[i] && this->isSpace(this->text[i]) ) i++;
-	if(this->text[i] == '"' || this->text[i] == '[') return true;
+	if(this->text[i] == '"' || this->text[i] == '[' || this->text[i] == '$') return true;
 	return false;
 }
 
@@ -726,9 +752,9 @@ bool Parser::expectCmdList(const char *text)
 
 bool Parser::expectString(const char *text)
 {
-	if(*text != '"' && *text != '[')
+	if(*text != '"' && *text != '[' && *text != '$')
 		return false;
-	if(*text == '"' && *++text)
+	if( (*text == '"' || *text == '$') && *++text)
 		return true;
 	if(*text == '[')
 	{
@@ -777,6 +803,7 @@ struct cmd cmds[] = {
 	{"load", TK_LOAD},
 	{"clearconsole", TK_CLEARCONSOLE}, // Must before clear to work
 	{"clear", TK_CLEAR},
+	{"make$", TK_MAKESTR}, // Must before make to work
 	{"make", TK_MAKE},
 	{"when", TK_WHEN},
 	{"sleep", TK_SLEEP},
@@ -786,7 +813,7 @@ struct cmd cmds[] = {
 	{"color", TK_COLOR},
 	{NULL, 0}
 };
-	
+
 // Interpret next thing as a command
 // no error checking
 // reaaaa == repeat

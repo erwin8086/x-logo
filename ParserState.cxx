@@ -10,6 +10,7 @@ ParserState::ParserState()
 	this->parent = NULL;
 	this->procs = new PS_PROCS();
 	this->stack = new std::vector<double>();
+	this->strVars = new PS_STRVARS();
 }
 
 ParserState::ParserState(ParserState *parent)
@@ -19,6 +20,7 @@ ParserState::ParserState(ParserState *parent)
 	this->parent = parent;
 	this->stack = this->parent->getStack();
 	this->delay = this->parent->getDelay();
+	this->strVars = new PS_STRVARS();
 }
 
 ParserState::~ParserState()
@@ -33,6 +35,12 @@ ParserState::~ParserState()
 		free(this->procs->at(i).name);
 		free(this->procs->at(i).commands);
 	}
+	for(i=0; i < this->strVars->size(); i++)
+	{
+		free(this->strVars->at(i).name);
+		free(this->strVars->at(i).val);
+	}
+	delete this->strVars;
 	delete this->procs;
 	delete this->vars;
 	if(!parent) delete this->stack;
@@ -178,4 +186,50 @@ double ParserState::pop()
 	double r = this->stack->back();
 	this->stack->pop_back();
 	return r;
+}
+
+bool ParserState::isStrVar(const char *name)
+{
+	int i;
+	for(i=0; i < this->strVars->size(); i++)
+	{
+		if(strcmp(this->strVars->at(i).name, name)==0)
+		{
+			return true;
+		}
+	}
+	if(this->parent) return this->parent->isStrVar(name);
+	return false;
+}
+
+const char* ParserState::getStrVar(const char *name)
+{
+	int i;
+	for(i=0; i < this->strVars->size(); i++)
+	{
+		if(strcmp(this->strVars->at(i).name, name)==0)
+		{
+			return this->strVars->at(i).val;
+		}
+	}
+	if(this->parent) return this->parent->getStrVar(name);
+	return NULL;
+}
+
+void ParserState::setStrVar(const char *name, const char *val)
+{
+	struct strVar v;
+	int i;
+	v.name = (char*) malloc(strlen(name)+1);
+	v.val  = (char*) malloc(strlen(val)+1);
+	strcpy(v.name, name);
+	strcpy(v.val, val);
+	for(i=0; i < this->strVars->size(); i++)
+	{
+		if(strcmp(this->strVars->at(i).name, name)==0)
+		{
+			this->strVars->erase(this->strVars->cbegin() + i);
+		}
+	}
+	this->strVars->push_back(v);
 }
