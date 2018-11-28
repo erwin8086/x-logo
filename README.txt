@@ -48,6 +48,7 @@ commands are:
 -> color <red> <green> <blue>: set color to the rgb code.
 -> make$ <string: name> <string: value> : Set string variable $name to value
    example: make "hello [Hello world!] print $hello
+-> say <string> : print <string> at current position in current color
 
 functions:
 -> :mod(<number 1>, <number 2>)

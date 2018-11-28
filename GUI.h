@@ -4,6 +4,12 @@
 #ifndef _GUI_H_
 #define _GUI_H_
 
+struct sayTxt {
+	int x; int y;
+	char *text;
+	unsigned long color;
+};
+
 class LogoGUI {
 	public:
 		LogoGUI(int width, int height);
@@ -21,6 +27,7 @@ class LogoGUI {
 		void clearAbort();
 		void clearLog();
 		void setColor(int r, int g, int b);
+		void sayText(const char *text);
 	private:
 		double x, y;
 		int width, height;
@@ -47,6 +54,7 @@ class LogoGUI {
 		std::vector<XColor> *colors;
 		unsigned long curColor;
 		bool abort = false;
+		std::vector<struct sayTxt> *sayTxts;
 
 };
 #endif

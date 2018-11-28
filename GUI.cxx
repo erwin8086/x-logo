@@ -19,6 +19,7 @@ LogoGUI::LogoGUI(int width, int height)
 {
 	this->height = height;
 	this->width  = width;
+	this->sayTxts = NULL;
 	// Open Display and alloc Window
 	this->dpy = XOpenDisplay(NIL);
 	assert(dpy);
@@ -96,6 +97,15 @@ void LogoGUI::reset()
 	this->y = (this->height - 100) / 2;
 	this->pen = true;
 	this->angle = 270;
+
+	if(this->sayTxts) {
+		for(i=0; i < this->sayTxts->size(); i++)
+		{
+			free(this->sayTxts->at(i).text);
+		}
+		delete this->sayTxts;
+	}
+	this->sayTxts = new std::vector<sayTxt>();
 	XClearWindow(this->dpy, this->win);
 	this->drawInterface(NULL);
 	XFlush(this->dpy);
@@ -228,6 +238,27 @@ void LogoGUI::restore()
 		XDrawLine(this->dpy, this->win, this->gc, this->lines->at(i), this->lines->at(i+1),
 			       this->lines->at(i+2), this->lines->at(i+3));
 	}
+	for(i=0; i < this->sayTxts->size(); i++)
+	{
+		struct sayTxt txt = this->sayTxts->at(i);
+		XSetForeground(this->dpy, this->gc, txt.color);
+		this->drawText(txt.x, txt.y, txt.text);
+	}
+	XSetForeground(this->dpy, this->gc, this->curColor);
+
+
+}
+
+void LogoGUI::sayText(const char *text)
+{
+	this->drawText(this->x, this->y, text);
+	struct sayTxt txt;
+	txt.x = this->x;
+	txt.y = this->y;
+	txt.color = this->curColor;
+	txt.text = (char*) malloc(strlen(text) + 1);
+	strcpy(txt.text, text);
+	this->sayTxts->push_back(txt);
 }
 
 bool LogoGUI::checkAbort()

@@ -30,6 +30,7 @@
 #define TK_WHILE 20
 #define TK_COLOR 21
 #define TK_MAKESTR 22
+#define TK_SAY 23
 
 #define EXPECTSTR {while(this->isSpace(*this->text)) this->text++; \
 	if(!this->expectString(this->text)) { this->outError("[ERR] String expected\n"); return; }}
@@ -130,19 +131,21 @@ void Parser::execute()
 				free(name);
 				break;
 			case TK_PRINT:
+			case TK_SAY:
 				if(this->isStrNext())
 				{
 					EXPECTSTR;
 					cmd = this->nextString();
-					g->logStr(cmd);
-					free(cmd);
 				} else {
 					cmd = (char*) malloc(32);
 					EXPECTNUM;
 					strfromd(cmd, 32, "%f", this->nextNumber());
-					g->logStr(cmd);
-					free(cmd);
 				}
+				if(t==TK_PRINT)
+					g->logStr(cmd);
+				else
+					g->sayText(cmd);
+				free(cmd);
 				break;
 			case TK_FAST:
 				this->parserState->setDelay(false);
@@ -811,6 +814,7 @@ struct cmd cmds[] = {
 	{"to", TK_TO},
 	{"while", TK_WHILE},
 	{"color", TK_COLOR},
+	{"say", TK_SAY},
 	{NULL, 0}
 };
 
