@@ -1,7 +1,25 @@
 to "circle [ make "r :pop() make "l :r * 2 * 3.14159 / 36 pu fd :r pd rt 90 bd :l / 2 repeat 36 [ rt 5 fd :l rt 5 ] lt 90 pu bd :r pd]
 
+to "sayTime [
+  pu fd 10 pd
+  make "t :pop()
+  when :equ(:t, 1) [say "1]
+  when :equ(:t, 2) [say "2]
+  when :equ(:t, 3) [say "3]
+  when :equ(:t, 4) [say "4]
+  when :equ(:t, 5) [say "5]
+  when :equ(:t, 6) [say "6]
+  when :equ(:t, 7) [say "7]
+  when :equ(:t, 8) [say "8]
+  when :equ(:t, 9) [say "9]
+  when :equ(:t, 10) [say "10]
+  when :equ(:t, 11) [say "11]
+  when :equ(:t, 12) [say "12]
+  pu bd 10 pd
+]
+
 to "clock [
-  push 150 circle repeat 12 [ pu fd 135 pd fd 15 pu bd 150 pd rt 30] 
+  push 150 circle rt 30 repeat 12 [ pu fd 135 pd fd 15 push :repcount sayTime pu bd 150 pd rt 30] lt 30
   make "sa :sec() * 6
   make "ma :min() * 6 + :sec() * 0.1 
   make "ha :mod(:hour(), 12) * 30 + :min() * 0.5
