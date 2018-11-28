@@ -296,6 +296,86 @@ void Parser::outError(const char *text)
 	free(buf);
 }
 
+#define STR_PARAM(x) { while(this->isSpace(**text)) (*text)++; \
+	if(**text != '(' && **text != ',') x=NULL; \
+	(*text)++; x=this->nextString(text); }
+#define STR_REQ(x) { if(!x) { x = (char*) malloc(1); *x = 0; } }
+
+char* Parser::getStringFunction(const char **text)
+{
+	if(**text != '$') return NULL;
+	(*text)++;
+	if(!**text || this->isSpace(**text)) return NULL;
+	const char *start = *text;
+	while(**text && !this->isSpace(**text) && **text != '(' && 
+	      **text != ')' && **text != ',') (*text)++;
+	char *buf = (char*) malloc(*text - start + 1);
+	memcpy(buf, start, *text - start);
+	buf[*text - start] = 0;
+	if(**text != '(')
+	{
+		if(!this->parserState->isStrVar(buf))
+		{
+			char *msg = (char*) malloc(256);
+			snprintf(msg, 256, "Unknown string variable: %s\n", buf);
+			this->outError(msg);
+			free(msg);
+		}
+		const char *var = this->parserState->getStrVar(buf);
+		if(!var) var = "";
+		free(buf);
+		buf = (char*) malloc(strlen(var) + 1);
+		strcpy(buf, var);
+		return buf;
+	}
+	char *funcName = buf;
+	char *res = NULL;
+	if(strcmp(funcName, "var")==0)
+	{
+		STR_PARAM(buf);
+		STR_REQ(buf);
+		if(!this->parserState->isStrVar(buf))
+		{
+			char *msg = (char*) malloc(256);
+			snprintf(msg, 256, "Unknown string variable: %s\n", buf);
+			this->outError(msg);
+			free(msg);
+		}
+		const char *var = this->parserState->getStrVar(buf);
+		if(!var) var = "";
+		res = (char*) malloc(strlen(var) + 1);
+		strcpy(res, var);
+		free(buf);
+	}
+	else if(strcmp(funcName, "cat")==0)
+	{
+		char *a, *b;
+		STR_PARAM(a);
+		STR_PARAM(b);
+		STR_REQ(a);
+		STR_REQ(b);
+		res = (char*) malloc(strlen(a) + strlen(b) + 1);
+		strcpy(res, a);
+		strcat(res, b);
+		free(a); free(b);
+	}
+	while(this->isSpace(**text)) (*text)++;
+	if(**text != ')')
+	{
+		this->outError("Missing ')' in string function");
+	} else {
+		(*text)++;
+	}
+	free(funcName);
+	if(!res)
+	{
+		res = (char*) malloc(1);
+		*res = 0;
+	}
+	return res;
+
+}
+
 
 double Parser::nextNumber()
 {
@@ -307,31 +387,24 @@ double Parser::nextNumber()
 
 char* Parser::nextString()
 {
-	while(this->isSpace(*this->text)) this->text++;
-	char type = *this->text;
-	if(type == '[') return this->nextCmdList();
-	if(type != '"' && type != '$') return NULL;
-	const char *start = ++this->text;
-	while(*this->text && !this->isSpace(*text)) this->text++;
-	const char *end = this->text;
+	return this->nextString(&this->text);
+}
+
+char* Parser::nextString(const char **text)
+{
+	while(this->isSpace(**text)) (*text)++;
+	char type = **text;
+	if(type == '[') return this->nextCmdList(text);
+	if(type == '$') return this->getStringFunction(text);
+	if(type != '"') return NULL;
+	(*text)++;
+	const char *start = *text;
+	while(**text && !this->isSpace(**text) &&
+	      **text != ',' && **text != ')') (*text)++;
+	const char *end = *text;
 	char *str = (char*) malloc(end - start + 1);
 	memcpy(str, start, end - start);
 	str[end - start] = 0;
-	if(type=='$')
-	{
-		if(!this->parserState->isStrVar(str))
-		{
-			char *buf = (char*) malloc(256);
-			snprintf(buf, 256, "Unknown string variable: %s\n", str);
-			this->outError(buf);
-			free(buf);
-		}
-		const char *res = this->parserState->getStrVar(str);
-		free(str);
-		if(!res) res = "";
-		str = (char*) malloc(strlen(res)+1);
-		strcpy(str, res);
-	}
 	return str;
 }
 
@@ -679,35 +752,40 @@ double Parser::nextNumber(const char *text, int *len)
 	return res;
 }
 
+char* Parser::nextCmdList()
+{
+	return this->nextCmdList(&this->text);
+}
+
 // Interpret next thing as a list of commands
 // surrounded by [ ]
 // works with nested repeats
-char* Parser::nextCmdList()
+char* Parser::nextCmdList(const char **text)
 {
 	int opens = -1;
 	const char *start;
-	while(*this->text && opens != 0)
+	while(**text && opens != 0)
 	{
-		if(*this->text == '[')
+		if(**text == '[')
 		{
 			if(opens==-1)
 			{
-				start = this->text;
+				start = *text;
 				opens = 1;
 			}
 			else
 			{
 				opens++;
 			}
-		} else if(*this->text == ']') {
+		} else if(**text == ']') {
 			opens--;
 		}
-		this->text++;
+		(*text)++;
 	}
 	// create a substring to return
-	char *sub = (char*) malloc(this->text - start - 1);
-	memcpy(sub, start + 1, this->text - start - 2);
-	sub[this->text - start - 2] = 0;
+	char *sub = (char*) malloc(*text - start - 1);
+	memcpy(sub, start + 1, *text - start - 2);
+	sub[*text - start - 2] = 0;
 	return sub;
 }	
 

@@ -18,8 +18,11 @@ class Parser {
 		double nextNumber();
 		double nextNumber(const char *text);
 		double nextNumber(const char *text, int *len);
+		char* nextCmdList(const char **text);
 		char* nextCmdList();
+		char* nextString(const char **text);
 		char* nextString();
+		char* getStringFunction(const char **text);
 		bool isStrNext();
 		void skipFunc(const char **text);
 		double getFunc(const char *text);
