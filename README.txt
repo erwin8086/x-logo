@@ -6,7 +6,7 @@ all angles are in degrees.
 parameter types:
   number -> simple number(5, 10.5, 100, ...), variables(:a, :hello, :repcount, ...),
   functions(:hour(), :gt(5, 10), ... )
-  strings -> "hello or [ hello world ]
+  strings -> "hello or [ hello world ], variables($a, $hello, ...)
   command lists -> [ print 5 rt 90 ]
 
 commands are:
@@ -46,6 +46,8 @@ commands are:
    <string> as <number>
 -> push <number> : push <number> to stack
 -> color <red> <green> <blue>: set color to the rgb code.
+-> make$ <string: name> <string: value> : Set string variable $name to value
+   example: make "hello [Hello world!] print $hello
 
 functions:
 -> :mod(<number 1>, <number 2>)
