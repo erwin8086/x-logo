@@ -299,6 +299,9 @@ void Parser::outError(const char *text)
 #define STR_PARAM(x) { while(this->isSpace(**text)) (*text)++; \
 	if(**text != '(' && **text != ',') x=NULL; \
 	(*text)++; x=this->nextString(text); }
+#define NUM_PARAM(x) { while(this->isSpace(**text)) (*text)++; \
+	if(**text != '(' && **text != ',') x=0; \
+	(*text)++; x=this->nextNumber(text); }
 #define STR_REQ(x) { if(!x) { x = (char*) malloc(1); *x = 0; } }
 
 char* Parser::getStringFunction(const char **text)
@@ -359,6 +362,20 @@ char* Parser::getStringFunction(const char **text)
 		strcat(res, b);
 		free(a); free(b);
 	}
+	else if(strcmp(funcName, "tostring")==0)
+	{
+		double n;
+		NUM_PARAM(n);
+		res = (char*) malloc(32);
+		strfromd(res, 32, "%f", n);
+	}
+	else if(strcmp(funcName, "int")==0)
+	{
+		double n;
+		NUM_PARAM(n);
+		res = (char*) malloc(32);
+		snprintf(res, 32, "%i", (int) n);
+	}
 	while(this->isSpace(**text)) (*text)++;
 	if(**text != ')')
 	{
@@ -416,7 +433,7 @@ double Parser::nextNumber(const char *text)
 void Parser::skipFunc(const char **text)
 {
 	int depth;
-	if(**text == ':')
+	if(**text == ':' || **text == '$')
 	{
 		(*text)++;
 		while(**text && !this->isSpace(**text) 
@@ -479,6 +496,10 @@ int Parser::numFuncParam(const char *text)
 }
 
 #define EXPECTPAR(x) { if(this->numFuncParam(text) != x) { this->outError("To many or to less parameters\n"); return 0; } }
+#define STR_PARAM(x) { while(this->isSpace(*text)) (text)++; \
+	if(*text != '(' && *text != ',') x=NULL; \
+	(text)++; x=this->nextString(&text); }
+#define STR_REQ(x) { if(!x) { x = (char*) malloc(1); *x = 0; } }
 
 double Parser::getFunc(const char *text)
 {
@@ -595,20 +616,58 @@ double Parser::getFunc(const char *text)
 	}
 	else if(strcmp(funcName, ":hour")==0)
 	{
+		EXPECTPAR(0);
 		res = t->tm_hour;
 	}
 	else if(strcmp(funcName, ":min")==0)
 	{
+		EXPECTPAR(0);
 		res = t->tm_min;
 	}
 	else if(strcmp(funcName, ":sec")==0)
 	{
+		EXPECTPAR(0);
 		res = t->tm_sec;
+	}
+	else if(strcmp(funcName, ":var")==0)
+	{
+		EXPECTPAR(1);
+		char *var;
+		STR_PARAM(var);
+		STR_REQ(var);
+		if(!this->parserState->isVar(var))
+		{
+			char *msg = (char*) malloc(256);
+			snprintf(msg, 256, "Unknown variable: %s\n", var);
+			this->outError(msg);
+			free(msg);
+			res = 0;
+		} else {
+			res = this->parserState->getVar(var);
+		}
+		free(var);
+	}
+	else if(strcmp(funcName, ":tonumber")==0)
+	{
+		EXPECTPAR(1);
+		char *num;
+		STR_PARAM(num);
+		STR_REQ(num);
+		res = atof(num);
+		free(num);
+
 	}
 	free(funcName);
 	return res;
 }
 
+double Parser::nextNumber(const char **text)
+{
+	int l;
+	double r = this->nextNumber(*text, &l);
+	*text += l;
+	return r;
+}
 
 
 // Interpret next thing as a number

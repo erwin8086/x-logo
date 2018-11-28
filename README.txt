@@ -7,6 +7,7 @@ parameter types:
   number -> simple number(5, 10.5, 100, ...), variables(:a, :hello, :repcount, ...),
   functions(:hour(), :gt(5, 10), ... )
   strings -> "hello or [ hello world ], variables($a, $hello, ...)
+  or functions($var("hello), $tostring(5), $cat([Hello ], "world!)
   command lists -> [ print 5 rt 90 ]
 
 commands are:
@@ -100,6 +101,20 @@ functions:
 -> :sec()
    returns secound of minute
 -> the variable :repcount contains the iteration of the current repeat command.
+-> :var(<string>)
+   returns the variable named by <string>
+-> :tonumber(<string>)
+   converts <string> to a number: uses atof
+
+string functions:
+-> $var(<string>)
+   returns the string variable named by <string>
+-> $tostring(<number>)
+   converts <number> to string
+-> $int(<number>)
+   converts <number> to string as int
+-> $cat(<string: a>, <string: b>)
+   concatenates a and b: returns <string: a><string: b> as string
 
 examples for valid numbers:
 -> 5

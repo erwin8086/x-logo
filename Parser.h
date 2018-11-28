@@ -18,6 +18,7 @@ class Parser {
 		double nextNumber();
 		double nextNumber(const char *text);
 		double nextNumber(const char *text, int *len);
+		double nextNumber(const char **text);
 		char* nextCmdList(const char **text);
 		char* nextCmdList();
 		char* nextString(const char **text);

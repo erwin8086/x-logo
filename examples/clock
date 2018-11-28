@@ -2,19 +2,7 @@ to "circle [ make "r :pop() make "l :r * 2 * 3.14159 / 36 pu fd :r pd rt 90 bd :
 
 to "sayTime [
   pu fd 10 pd
-  make "t :pop()
-  when :equ(:t, 1) [say "1]
-  when :equ(:t, 2) [say "2]
-  when :equ(:t, 3) [say "3]
-  when :equ(:t, 4) [say "4]
-  when :equ(:t, 5) [say "5]
-  when :equ(:t, 6) [say "6]
-  when :equ(:t, 7) [say "7]
-  when :equ(:t, 8) [say "8]
-  when :equ(:t, 9) [say "9]
-  when :equ(:t, 10) [say "10]
-  when :equ(:t, 11) [say "11]
-  when :equ(:t, 12) [say "12]
+  say $int(:pop())
   pu bd 10 pd
 ]
 
